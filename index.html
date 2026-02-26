@@ -63,10 +63,6 @@ button.danger{
   border-color:rgba(239,68,68,.55);
   background:#fff;
 }
-.subrow{
-  margin-top:8px;
-}
-.small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
 /* Card */
 .card{
@@ -77,6 +73,14 @@ button.danger{
   padding:14px;
   box-shadow:0 8px 18px rgba(0,0,0,.06);
 }
+
+/* NEU: Kopfbereich deutlicher absetzen */
+.card.headerCard{
+  background:linear-gradient(135deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
+  border:1px solid rgba(79,70,229,.18);
+  box-shadow:0 10px 22px rgba(0,0,0,.08);
+}
+
 label{ font-weight:900; }
 input, select{
   width:100%;
@@ -87,6 +91,7 @@ input, select{
   background:#fff;
 }
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
 /* Day rows */
 .row{
@@ -233,14 +238,10 @@ input, select{
       <button id="prevBtn" type="button">PDF Vorschau</button>
       <button class="danger" id="delBtn" type="button">Alles löschen</button>
     </div>
-
-    <div class="subrow">
-      <button id="saveBtn" type="button">Datei sichern</button>
-      <div class="small">Erstellt by Dr.Careless</div>
-    </div>
   </div>
 
-  <div class="card">
+  <!-- Kopf-Bereich farblich abgesetzt -->
+  <div class="card headerCard">
     <div>
       <label>Name:</label>
       <input id="name" placeholder="Bitte hier deinen Namen eintragen">
@@ -319,7 +320,6 @@ const sumEl   = document.getElementById("sum");
 const pdfBtn  = document.getElementById("pdfBtn");
 const prevBtn = document.getElementById("prevBtn");
 const delBtn  = document.getElementById("delBtn");
-const saveBtn = document.getElementById("saveBtn");
 
 const modalBack = document.getElementById("modalBack");
 const previewTitle = document.getElementById("previewTitle");
@@ -398,9 +398,9 @@ function build(){
         <div class="timelabels"><span>von</span><span>bis</span></div>
 
         <div class="timewrap">
-          <input type="text" inputmode="numeric" class="start" placeholder="HH:MM" maxlength="5" autocomplete="off">
+          <input type="time" class="start">
           <div class="dash">–</div>
-          <input type="text" inputmode="numeric" class="end" placeholder="HH:MM" maxlength="5" autocomplete="off">
+          <input type="time" class="end">
         </div>
 
         <div style="height:8px"></div>
@@ -415,9 +415,8 @@ function build(){
     const hours=row.querySelector(".hours");
 
     ort.addEventListener("change", ()=>{ markDirty(); saveState(); });
-
-    start.addEventListener("input", (e)=>{ formatTime(e.target); autoHours(row); markDirty(); saveState(); });
-    end.addEventListener("input", (e)=>{ formatTime(e.target); autoHours(row); markDirty(); saveState(); });
+    start.addEventListener("change", ()=>{ autoHours(row); markDirty(); saveState(); });
+    end.addEventListener("change", ()=>{ autoHours(row); markDirty(); saveState(); });
 
     hours.addEventListener("focus",(e)=>e.target.blur());
 
@@ -437,13 +436,6 @@ function applyMonthAuto(){
   dirty=false;
   exported=false;
   build();
-}
-
-function formatTime(el){
-  let v = (el.value || "").replace(/[^\d]/g, "");
-  if(v.length > 4) v = v.slice(0,4);
-  if(v.length >= 3) v = v.slice(0,2) + ":" + v.slice(2);
-  el.value = v;
 }
 
 function timeToMinutes(t){
@@ -633,29 +625,10 @@ function openPreview(){
 }
 function closePreview(){ modalBack.style.display="none"; }
 
-/*** NUR FORMULAR (.HTML) SICHERN – keine JSON/TXT Dateien ***/
-function saveOnlyFormHTML(){
-  const mm=pad2(current.getMonth()+1);
-  const yy=current.getFullYear();
-  const name=(nameEl.value||"Name").trim()
-    .replace(/[^\wäöüÄÖÜß\- ]/g,"")
-    .replace(/\s+/g,"_");
-
-  const filename = `stundenformular_${mm}-${yy}_${name}.html`;
-  const html = "<!doctype html>\n" + document.documentElement.outerHTML;
-
-  const blob = new Blob([html], { type:"text/html" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-}
-
 /*** EVENTS ***/
 pdfBtn.addEventListener("click", exportPDF);
 prevBtn.addEventListener("click", openPreview);
 delBtn.addEventListener("click", allesLoeschen);
-saveBtn.addEventListener("click", saveOnlyFormHTML);
 
 closePrevTop.addEventListener("click", closePreview);
 closePrevBottom.addEventListener("click", closePreview);
