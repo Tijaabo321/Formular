@@ -26,6 +26,7 @@ body{
 }
 .wrap{ max-width:560px; margin:0 auto; padding:12px; }
 
+/* Topbar */
 .topbar{
   position:sticky;
   top:10px;
@@ -39,7 +40,7 @@ body{
 }
 .btnrow{
   display:grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr; /* + Senden Button */
   gap:8px;
 }
 button{
@@ -62,20 +63,32 @@ button.danger{
   border-color:rgba(239,68,68,.55);
   background:#fff;
 }
+button.send{
+  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
+  color:#fff;
+  border-color:rgba(79,70,229,.35);
+}
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
 .small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
+/* Card */
 .card{
   margin-top:10px;
   background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.12));
   border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   padding:14px;
+  box-shadow:0 8px 18px rgba(0,0,0,.06);
 }
 .cardDivider{
   height:2px;
   margin:12px 0 6px;
   background:linear-gradient(90deg, rgba(79,70,229,.55), rgba(6,182,212,.55));
   border-radius:999px;
+  opacity:.7;
 }
 label{ font-weight:900; }
 input, select{
@@ -88,13 +101,16 @@ input, select{
 }
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 
+/* Day rows */
 .row{
   margin-top:10px;
   background:#fff;
   border:1px solid var(--border);
   border-radius:18px;
   padding:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.05);
   position:relative;
+  overflow:hidden;
 }
 .row::before{
   content:"";
@@ -125,7 +141,7 @@ input, select{
   align-items:center;
 }
 .timewrap input{ text-align:center; }
-.dash{ font-weight:1000; color:var(--muted); }
+.dash{ font-weight:1000; color:var(--muted); text-align:center; }
 
 .hours{
   text-align:right;
@@ -133,6 +149,7 @@ input, select{
   background:#f8fafc;
 }
 
+/* Total */
 .total{
   margin-top:12px;
   background:#fff;
@@ -142,21 +159,71 @@ input, select{
   font-size:22px;
   font-weight:1000;
   text-align:center;
+  box-shadow:0 -10px 22px rgba(0,0,0,.06);
 }
 
+/* Preview modal */
+.modalBack{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  z-index:200;
+  padding:14px;
+}
+.modal{
+  max-width:900px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.modalTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border-bottom:1px solid var(--border);
+}
+.modalBody{
+  padding:12px;
+  max-height:70vh;
+  overflow:auto;
+}
+.modalBtns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:12px;
+  border-top:1px solid var(--border);
+}
+
+/* =========================
+   PRINT: 1 Seite (GARANTIERT)
+   ========================= */
 @page{ size:A4 landscape; margin:3mm; }
 #printArea{ display:none; }
 
 @media print{
-  .topbar, .card, .total, #rows{ display:none !important; }
+  body{ background:#fff; }
+  .topbar, .card, .total, #rows, .modalBack{ display:none !important; }
+  .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
   #printArea{
-    zoom:0.92;
-    transform:scale(0.92);
-    transform-origin:top left;
-    width:108.7%;
+    zoom: 0.92;
+    transform: scale(0.92);
+    transform-origin: top left;
+    width: 108.7%;
   }
+
+  #printTitle{ font-size:11pt; font-weight:1000; margin:0 0 1.5mm 0; }
+  #printMetaTop{ font-size:8.5pt; margin:0 0 1.5mm 0; }
+  #printMetaBottom{ font-size:8.5pt; margin:1.5mm 0 0 0; }
 
   table{
     width:100%;
@@ -168,9 +235,17 @@ input, select{
   th, td{
     border:1px solid #111;
     padding:2px 4px;
+    vertical-align:middle;
+    overflow:hidden;
     white-space:nowrap;
+    text-overflow:ellipsis;
   }
-  th{ background:#eaeaea; }
+  th{ background:#eaeaea; font-weight:900; }
+  thead{ display:table-header-group; }
+  tfoot{ display:table-footer-group; }
+  tr{ page-break-inside:avoid; }
+  .right{ text-align:right; }
+  .empty td{ background:#f3f4f6; }
 }
 </style>
 </head>
@@ -180,20 +255,22 @@ input, select{
 
   <div class="topbar">
     <div class="btnrow">
-      <button class="primary" id="pdfBtn">PDF Export</button>
-      <button id="prevBtn">PDF Vorschau</button>
-      <button id="sendBtn">Senden</button>
-      <button class="danger" id="delBtn">Alles löschen</button>
+      <button class="primary" id="pdfBtn" type="button">PDF Export</button>
+      <button id="prevBtn" type="button">PDF Vorschau</button>
+      <button class="send" id="sendBtn" type="button">Senden</button>
+      <button class="danger" id="delBtn" type="button">Alles löschen</button>
     </div>
   </div>
 
   <div class="card">
-    <label>Name:</label>
-    <input id="name">
+    <div>
+      <label>Name:</label>
+      <input id="name" placeholder="Bitte hier deinen Namen eintragen">
+    </div>
 
     <div style="margin-top:10px;">
       <label>Monat / Jahr</label>
-      <div class="grid2">
+      <div class="grid2" style="margin-top:6px;">
         <select id="month"></select>
         <select id="year"></select>
       </div>
@@ -209,20 +286,63 @@ input, select{
     Gesamtstunden: <span id="sum">0 Std</span>
   </div>
 
+  <!-- Vorschau -->
+  <div class="modalBack" id="modalBack">
+    <div class="modal">
+      <div class="modalTop">
+        <b id="previewTitle">PDF Vorschau</b>
+        <button type="button" id="closePrevTop" style="width:auto; padding:10px 12px;">Schließen</button>
+      </div>
+      <div class="modalBody">
+        <div id="previewTable"></div>
+        <div id="previewTotal" class="small" style="margin-top:10px; font-weight:900;"></div>
+      </div>
+      <div class="modalBtns">
+        <button class="primary" type="button" id="exportFromPreview">PDF Export</button>
+        <button type="button" id="closePrevBottom">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print -->
   <div id="printArea">
     <div id="printTitle"></div>
+    <div id="printMetaTop"></div>
+
     <table>
+      <thead>
+        <tr>
+          <th style="width:8%;">Tag</th>
+          <th style="width:44%;">Einsatzort</th>
+          <th style="width:16%;">Beginn</th>
+          <th style="width:16%;">Ende</th>
+          <th class="right" style="width:16%;">Stunden</th>
+        </tr>
+      </thead>
       <tbody id="printBody"></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4" class="right">Gesamt</th>
+          <th class="right" id="printTotal"></th>
+        </tr>
+      </tfoot>
     </table>
-    <div id="printTotal"></div>
+
+    <div id="printMetaBottom"></div>
   </div>
 
 </div>
 
 <script>
+/* =========================================================
+   HIER EINTRAGEN:
+   deinen Apps Script WebApp EXEC Link (muss mit /exec enden)
+   ========================================================= */
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
 
+/* ====== Rest wie gehabt ====== */
 const ORTE = ["Niendorf Nord","Hagenbecks Tierpark","Farmsen","Ochsenzoll"];
+const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
@@ -231,128 +351,385 @@ const rowsEl  = document.getElementById("rows");
 const sumEl   = document.getElementById("sum");
 
 const pdfBtn  = document.getElementById("pdfBtn");
-const delBtn  = document.getElementById("delBtn");
+const prevBtn = document.getElementById("prevBtn");
 const sendBtn = document.getElementById("sendBtn");
+const delBtn  = document.getElementById("delBtn");
+
+const modalBack = document.getElementById("modalBack");
+const previewTitle = document.getElementById("previewTitle");
+const previewTable = document.getElementById("previewTable");
+const previewTotal = document.getElementById("previewTotal");
+const closePrevTop = document.getElementById("closePrevTop");
+const closePrevBottom = document.getElementById("closePrevBottom");
+const exportFromPreview = document.getElementById("exportFromPreview");
+
+const printTitleEl = document.getElementById("printTitle");
+const printMetaTopEl  = document.getElementById("printMetaTop");
+const printMetaBottomEl  = document.getElementById("printMetaBottom");
+const printBodyEl  = document.getElementById("printBody");
+const printTotalEl = document.getElementById("printTotal");
 
 let current = new Date(); current.setDate(1);
+let dirty = false;
+let exported = false;
 
 function pad2(n){ return String(n).padStart(2,"0"); }
+function ymKey(d){ return d.getFullYear() + "-" + pad2(d.getMonth()+1); }
+function storageKey(){ return STORAGE_PREFIX + ymKey(current); }
 function daysInMonth(m,y){ return new Date(y, m, 0).getDate(); }
 
+function markDirty(){
+  dirty=true;
+  exported=false;
+  pdfBtn.disabled=false;
+}
+
 function fillMonthYear(){
-  for(let i=1;i<=12;i++) monthEl.innerHTML+=`<option>${pad2(i)}</option>`;
-  for(let i=2024;i<=2035;i++) yearEl.innerHTML+=`<option>${i}</option>`;
-  monthEl.value=pad2(current.getMonth()+1);
-  yearEl.value=current.getFullYear();
-}
+  monthEl.innerHTML="";
+  yearEl.innerHTML="";
 
-function timeToMinutes(t){
-  if(!t) return null;
-  const [h,m]=t.split(":");
-  return (+h)*60+(+m);
-}
-
-function formatHoursSmart(hours){
-  const r=Math.round(hours*100)/100;
-  if(Number.isInteger(r)) return r+" Std";
-  return r+" Std";
-}
-
-function autoHours(row){
-  const s=timeToMinutes(row.querySelector(".start").value);
-  const e=timeToMinutes(row.querySelector(".end").value);
-  if(s==null||e==null) return;
-  let diff=e-s; if(diff<0) diff+=1440;
-  row.querySelector(".hours").value=formatHoursSmart(diff/60);
-  updateTotal();
-}
-
-function parseHours(v){
-  const m=v.match(/(\d+(\.\d+)?)/);
-  return m?parseFloat(m[1]):0;
-}
-
-function updateTotal(){
-  let sum=0;
-  document.querySelectorAll(".hours").forEach(i=>sum+=parseHours(i.value||""));
-  sumEl.textContent=formatHoursSmart(sum);
-}
-
-function getState(){
-  const rows=[];
-  document.querySelectorAll(".row").forEach(r=>{
-    rows.push({
-      day:r.dataset.day,
-      ort:r.querySelector(".ort").value,
-      start:r.querySelector(".start").value,
-      end:r.querySelector(".end").value,
-      hours:r.querySelector(".hours").value
-    });
-  });
-  return { name:nameEl.value, rows, total:sumEl.textContent };
-}
-
-async function sendToOwner(){
-  sendBtn.disabled=true;
-  sendBtn.textContent="Sende...";
-
-  try{
-    const res=await fetch(WEB_APP_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify(getState())
-    });
-
-    if(!res.ok) throw new Error(await res.text());
-    alert("Gesendet ✅");
-  }catch(e){
-    alert("Fehler: "+e.message);
+  for(let i=1;i<=12;i++){
+    const o=document.createElement("option");
+    o.value=String(i);
+    o.textContent=pad2(i);
+    monthEl.appendChild(o);
   }
 
-  sendBtn.disabled=false;
-  sendBtn.textContent="Senden";
+  const nowY=new Date().getFullYear();
+  for(let i=nowY-3;i<=nowY+6;i++){
+    const o=document.createElement("option");
+    o.value=String(i);
+    o.textContent=String(i);
+    yearEl.appendChild(o);
+  }
+
+  monthEl.value=String(current.getMonth()+1);
+  yearEl.value=String(current.getFullYear());
 }
 
 function build(){
-  const m=parseInt(monthEl.value);
-  const y=parseInt(yearEl.value);
+  fillMonthYear();
+
+  const m=parseInt(monthEl.value,10);
+  const y=parseInt(yearEl.value,10);
   const days=daysInMonth(m,y);
 
   rowsEl.innerHTML="";
+
   for(let d=1; d<=days; d++){
     const row=document.createElement("div");
     row.className="row";
-    row.dataset.day=d;
+    row.dataset.day=String(d);
 
     row.innerHTML=`
       <div class="rowInner">
         <div class="date">${pad2(d)}.${pad2(m)}.${y}</div>
-        <select class="ort">${ORTE.map(o=>`<option>${o}</option>`).join("")}</select>
+
+        <select class="ort">
+          <option value="" selected disabled>Standort wählen</option>
+          ${ORTE.map(o=>`<option value="${o}">${o}</option>`).join("")}
+        </select>
+
+        <div class="timelabels"><span>von</span><span>bis</span></div>
+
         <div class="timewrap">
           <input type="time" class="start">
           <div class="dash">–</div>
           <input type="time" class="end">
         </div>
-        <input class="hours" readonly>
+
+        <div style="height:8px"></div>
+
+        <input type="text" class="hours" placeholder="Stunden" readonly>
       </div>
     `;
 
-    row.querySelector(".start").addEventListener("change",()=>autoHours(row));
-    row.querySelector(".end").addEventListener("change",()=>autoHours(row));
+    const ort=row.querySelector(".ort");
+    const start=row.querySelector(".start");
+    const end=row.querySelector(".end");
+    const hours=row.querySelector(".hours");
+
+    ort.addEventListener("change", ()=>{ markDirty(); saveState(); });
+    start.addEventListener("change", ()=>{ autoHours(row); markDirty(); saveState(); });
+    end.addEventListener("change", ()=>{ autoHours(row); markDirty(); saveState(); });
+    hours.addEventListener("focus",(e)=>e.target.blur());
 
     rowsEl.appendChild(row);
   }
+
+  loadState();
+  updateTotal();
+
+  if(exported && !dirty) pdfBtn.disabled=true;
 }
 
-pdfBtn.onclick=()=>window.print();
-delBtn.onclick=()=>location.reload();
-sendBtn.onclick=sendToOwner;
+function applyMonthAuto(){
+  const mm=parseInt(monthEl.value,10);
+  const yy=parseInt(yearEl.value,10);
+  current=new Date(yy, mm-1, 1);
+  dirty=false;
+  exported=false;
+  build();
+}
 
+function timeToMinutes(t){
+  if(!t) return null;
+  const m=t.match(/^(\d{2}):(\d{2})$/);
+  if(!m) return null;
+  return parseInt(m[1],10)*60 + parseInt(m[2],10);
+}
+
+function formatHoursSmart(hours){
+  if(hours == null || isNaN(hours)) return "";
+  const rounded = Math.round(hours * 100) / 100;
+  if(Number.isInteger(rounded)) return rounded + " Std";
+  return rounded.toString() + " Std";
+}
+
+function autoHours(row){
+  const s=timeToMinutes(row.querySelector(".start").value);
+  const e=timeToMinutes(row.querySelector(".end").value);
+  const out=row.querySelector(".hours");
+
+  if(s==null || e==null){
+    out.value="";
+    updateTotal();
+    return;
+  }
+  let diff=e-s;
+  if(diff<0) diff+=1440;
+  const hours = diff/60;
+  out.value = formatHoursSmart(hours);
+  updateTotal();
+}
+
+function parseHoursFromField(v){
+  if(!v) return NaN;
+  const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : NaN;
+}
+
+function updateTotal(){
+  let sum=0;
+  document.querySelectorAll(".hours").forEach(i=>{
+    const v=parseHoursFromField(i.value);
+    if(!isNaN(v)) sum+=v;
+  });
+  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
+}
+
+function getState(){
+  const rows=[];
+  document.querySelectorAll("#rows .row").forEach(r=>{
+    rows.push({
+      day:r.dataset.day,
+      ort:r.querySelector(".ort").value||"",
+      start:r.querySelector(".start").value||"",
+      end:r.querySelector(".end").value||"",
+      hours:r.querySelector(".hours").value||""
+    });
+  });
+  return {
+    name:nameEl.value||"",
+    monthKey:ymKey(current),
+    month: pad2(current.getMonth()+1),
+    year: String(current.getFullYear()),
+    rows,
+    total: sumEl.textContent || "",
+    dirty,
+    exported
+  };
+}
+
+function saveState(){
+  localStorage.setItem(storageKey(), JSON.stringify(getState()));
+}
+
+function loadState(){
+  const raw=localStorage.getItem(storageKey());
+  if(!raw){ saveState(); return; }
+
+  try{
+    const st=JSON.parse(raw);
+    nameEl.value=st.name||"";
+
+    const rowEls=document.querySelectorAll("#rows .row");
+    (st.rows||[]).forEach((r, idx)=>{
+      if(!rowEls[idx]) return;
+      const ortSel=rowEls[idx].querySelector(".ort");
+      if(r.ort) ortSel.value=r.ort; else ortSel.selectedIndex=0;
+
+      rowEls[idx].querySelector(".start").value=r.start||"";
+      rowEls[idx].querySelector(".end").value=r.end||"";
+      rowEls[idx].querySelector(".hours").value=r.hours||"";
+    });
+
+    dirty=!!st.dirty;
+    exported=!!st.exported;
+  }catch(e){
+    saveState();
+  }
+}
+
+function buildPrintTable(){
+  const name=(nameEl.value||"").trim();
+  const mm=pad2(current.getMonth()+1);
+  const yy=current.getFullYear();
+
+  printTitleEl.textContent=`Stundenformular – ${mm}/${yy}`+(name?` – ${name}`:"");
+  printMetaTopEl.textContent=`Erstellt von Sad`;
+
+  printBodyEl.innerHTML="";
+  let sum=0;
+
+  document.querySelectorAll("#rows .row").forEach(r=>{
+    const day=r.dataset.day;
+    const ort=r.querySelector(".ort").value||"";
+    const start=r.querySelector(".start").value||"";
+    const end=r.querySelector(".end").value||"";
+    const hrsTxt=r.querySelector(".hours").value||"";
+    const empty=!ort&&!start&&!end&&!hrsTxt;
+
+    const tr=document.createElement("tr");
+    if(empty) tr.className="empty";
+
+    const hrsNum = parseHoursFromField(hrsTxt);
+    if(!isNaN(hrsNum)) sum+=hrsNum;
+
+    tr.innerHTML=`
+      <td>${pad2(day)}</td>
+      <td>${ort}</td>
+      <td>${start}</td>
+      <td>${end}</td>
+      <td class="right">${hrsTxt}</td>
+    `;
+    printBodyEl.appendChild(tr);
+  });
+
+  printTotalEl.textContent = formatHoursSmart(sum);
+  printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
+}
+
+function exportPDF(){
+  buildPrintTable();
+  exported=true;
+  dirty=false;
+  pdfBtn.disabled=true;
+  saveState();
+  window.print();
+}
+
+function allesLoeschen(){
+  if(!confirm("Wirklich ALLES für diesen Monat löschen?")) return;
+  localStorage.removeItem(storageKey());
+  dirty=false;
+  exported=false;
+  build();
+}
+
+/*** Vorschau (mit mehr Farbe + Gesamt unten) ***/
+function openPreview(){
+  const name=(nameEl.value||"").trim();
+  const mm=pad2(current.getMonth()+1);
+  const yy=current.getFullYear();
+
+  previewTitle.textContent=`PDF Vorschau – ${mm}/${yy}`+(name?` – ${name}`:"");
+
+  let sum=0;
+  const parts=[];
+  parts.push(`
+    <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px;">
+      <thead>
+        <tr style="background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));">
+          <th style="border:1px solid #ddd; padding:8px; width:10%;">Tag</th>
+          <th style="border:1px solid #ddd; padding:8px; width:42%;">Einsatzort</th>
+          <th style="border:1px solid #ddd; padding:8px; width:16%;">Beginn</th>
+          <th style="border:1px solid #ddd; padding:8px; width:16%;">Ende</th>
+          <th style="border:1px solid #ddd; padding:8px; width:16%; text-align:right;">Stunden</th>
+        </tr>
+      </thead>
+      <tbody>
+  `);
+
+  document.querySelectorAll("#rows .row").forEach(r=>{
+    const day=r.dataset.day;
+    const ort=r.querySelector(".ort").value||"";
+    const start=r.querySelector(".start").value||"";
+    const end=r.querySelector(".end").value||"";
+    const hrs=r.querySelector(".hours").value||"";
+    const empty=!ort&&!start&&!end&&!hrs;
+
+    const v = parseHoursFromField(hrs);
+    if(!isNaN(v)) sum+=v;
+
+    parts.push(`
+      <tr style="${empty ? "background:#f3f4f6;" : ""}">
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pad2(day)}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
+        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs}</td>
+      </tr>
+    `);
+  });
+
+  parts.push(`</tbody></table>`);
+  previewTable.innerHTML=parts.join("");
+  previewTotal.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
+  modalBack.style.display="block";
+}
+function closePreview(){ modalBack.style.display="none"; }
+
+/* ===== Senden (Fix: text/plain => kein Preflight => kein Failed to fetch) ===== */
+async function senden(){
+  if(!WEB_APP_URL || WEB_APP_URL.includes("HIER_DEIN_EXEC_LINK")){
+    alert("Bitte erst den WEB_APP_URL (exec Link) im Code eintragen.");
+    return;
+  }
+
+  const payload = getState();
+
+  sendBtn.disabled = true;
+  const oldText = sendBtn.textContent;
+  sendBtn.textContent = "Sende...";
+
+  try{
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // <<< WICHTIG
+      body: JSON.stringify(payload)
+    });
+
+    // Wenn der Server OK liefert, ist gut. (res.ok kann bei einigen Browsern trotzdem true sein)
+    alert("Gesendet ✅");
+  }catch(err){
+    console.error(err);
+    alert("Fehler: Failed to fetch");
+  }finally{
+    sendBtn.disabled = false;
+    sendBtn.textContent = oldText;
+  }
+}
+
+/*** EVENTS ***/
+pdfBtn.addEventListener("click", exportPDF);
+prevBtn.addEventListener("click", openPreview);
+sendBtn.addEventListener("click", senden);
+delBtn.addEventListener("click", allesLoeschen);
+
+closePrevTop.addEventListener("click", closePreview);
+closePrevBottom.addEventListener("click", closePreview);
+exportFromPreview.addEventListener("click", exportPDF);
+
+modalBack.addEventListener("click",(e)=>{ if(e.target===modalBack) closePreview(); });
+
+monthEl.addEventListener("change", applyMonthAuto);
+yearEl.addEventListener("change", applyMonthAuto);
+nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
+
+/*** START ***/
 fillMonthYear();
 build();
 </script>
 </body>
 </html>
-
-
-
