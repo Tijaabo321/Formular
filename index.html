@@ -248,6 +248,12 @@ input, select{
   .empty td{ background:#f3f4f6; }
 }
 </style>
+
+<!-- PIN: Seite zuerst verstecken, wird nach richtiger PIN sichtbar -->
+<script>
+document.documentElement.style.visibility = "hidden";
+</script>
+
 </head>
 
 <body>
@@ -256,7 +262,7 @@ input, select{
   <div class="topbar">
     <div class="btnrow">
       <button class="primary" id="pdfBtn" type="button">PDF Export</button>
-      <button id="prevBtn" type="button">Übersicht</button>
+      <button id="prevBtn" type="button">PDF Vorschau</button>
       <button class="send" id="sendBtn" type="button">Senden</button>
       <button class="danger" id="delBtn" type="button">Alles löschen</button>
     </div>
@@ -336,9 +342,13 @@ input, select{
 <script>
 /* =========================================================
    HIER EINTRAGEN:
-   deinen Apps Script WebApp EXEC Link (muss mit /exec enden)
+   1) Apps Script WebApp EXEC Link (muss mit /exec enden)
+   2) PIN (optional)
+   3) Hinweis vor dem Senden
    ========================================================= */
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";   // <<< HIER EINTRAGEN
+const ACCESS_PIN  = "8558";                      // <<< HIER EINTRAGEN (z.B. "1234") oder leer lassen
+const SEND_HINT_TEXT = "Bitte sende nur einmal im Monat deine Stunden und nicht täglich."; // <<< HIER ÄNDERN falls nötig
 
 /* ====== Rest wie gehabt ====== */
 const ORTE = ["Niendorf Nord","Hagenbecks Tierpark","Farmsen","Ochsenzoll"];
@@ -680,12 +690,39 @@ function openPreview(){
 }
 function closePreview(){ modalBack.style.display="none"; }
 
+/* ===== PIN (optional) ===== */
+function requirePinIfConfigured(){
+  if(!ACCESS_PIN){
+    document.documentElement.style.visibility = "visible";
+    return;
+  }
+
+  let ok = false;
+  for(let i=0;i<5;i++){
+    const entered = prompt("PIN eingeben:");
+    if(entered === null) break;
+    if(String(entered) === String(ACCESS_PIN)){ ok = true; break; }
+    alert("Falsche PIN");
+  }
+
+  if(!ok){
+    document.body.innerHTML = "";
+    document.documentElement.style.visibility = "visible";
+    return;
+  }
+
+  document.documentElement.style.visibility = "visible";
+}
+
 /* ===== Senden (Fix: text/plain => kein Preflight => kein Failed to fetch) ===== */
 async function senden(){
   if(!WEB_APP_URL || WEB_APP_URL.includes("HIER_DEIN_EXEC_LINK")){
     alert("Bitte erst den WEB_APP_URL (exec Link) im Code eintragen.");
     return;
   }
+
+  // Hinweis VOR dem Senden
+  alert(SEND_HINT_TEXT);
 
   const payload = getState();
 
@@ -696,11 +733,10 @@ async function senden(){
   try{
     const res = await fetch(WEB_APP_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" }, // <<< WICHTIG
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
 
-    // Wenn der Server OK liefert, ist gut. (res.ok kann bei einigen Browsern trotzdem true sein)
     alert("Gesendet ✅");
   }catch(err){
     console.error(err);
@@ -728,10 +764,9 @@ yearEl.addEventListener("change", applyMonthAuto);
 nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 
 /*** START ***/
+requirePinIfConfigured();
 fillMonthYear();
 build();
 </script>
 </body>
 </html>
-
-
