@@ -68,31 +68,19 @@ button.danger{
 /* Card */
 .card{
   margin-top:10px;
-  background:var(--card);
-  border:1px solid var(--border);
+  background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.12));
+  border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   padding:14px;
   box-shadow:0 8px 18px rgba(0,0,0,.06);
 }
-
-/* Kopfbereich deutlicher + mehr Farbe */
-.card.headerCard{
-  background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.14));
-  border:1px solid rgba(79,70,229,.22);
-  box-shadow:0 12px 26px rgba(0,0,0,.10);
-  position:relative;
-  overflow:hidden;
+.cardDivider{
+  height:2px;
+  margin:12px 0 6px;
+  background:linear-gradient(90deg, rgba(79,70,229,.55), rgba(6,182,212,.55));
+  border-radius:999px;
+  opacity:.7;
 }
-.card.headerCard::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:radial-gradient(700px 220px at 10% 0%, rgba(79,70,229,.20), transparent 60%),
-             radial-gradient(700px 220px at 90% 0%, rgba(6,182,212,.18), transparent 60%);
-  pointer-events:none;
-}
-.card.headerCard > *{ position:relative; z-index:1; }
-
 label{ font-weight:900; }
 input, select{
   width:100%;
@@ -103,15 +91,6 @@ input, select{
   background:#fff;
 }
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-
-/* NEU: Trennlinie zwischen Kopf und Tagen */
-.sectionDivider{
-  margin:12px 2px 8px;
-  height:1px;
-  background:linear-gradient(90deg, rgba(79,70,229,.45), rgba(6,182,212,.45));
-  border-radius:999px;
-  box-shadow:0 6px 16px rgba(0,0,0,.06);
-}
 
 /* Day rows */
 .row{
@@ -152,6 +131,7 @@ input, select{
   gap:8px;
   align-items:center;
 }
+.timewrap input{ text-align:center; }
 .dash{ font-weight:1000; color:var(--muted); text-align:center; }
 
 .hours{
@@ -219,12 +199,13 @@ input, select{
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, #rows, .modalBack, .sectionDivider{ display:none !important; }
+  .topbar, .card, .total, #rows, .modalBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
   #printTitle{ font-size:12pt; font-weight:1000; margin:0 0 2mm 0; }
-  #printMeta{ font-size:9pt; margin:0 0 2mm 0; }
+  #printMetaTop{ font-size:9pt; margin:0 0 2mm 0; }
+  #printMetaBottom{ font-size:9pt; margin:2mm 0 0 0; }
 
   table{
     width:100%;
@@ -260,7 +241,7 @@ input, select{
     </div>
   </div>
 
-  <div class="card headerCard">
+  <div class="card">
     <div>
       <label>Name:</label>
       <input id="name" placeholder="Bitte hier deinen Namen eintragen">
@@ -274,14 +255,14 @@ input, select{
       </div>
       <div class="small">Erstellt by Dr.Careless</div>
     </div>
-  </div>
 
-  <div class="sectionDivider"></div>
+    <div class="cardDivider"></div>
+  </div>
 
   <div id="rows"></div>
 
   <div class="total">
-    Gesamtstunden: <span id="sum">0.00</span>
+    Gesamtstunden: <span id="sum">0 Std</span>
   </div>
 
   <!-- Vorschau -->
@@ -293,7 +274,7 @@ input, select{
       </div>
       <div class="modalBody">
         <div id="previewTable"></div>
-        <div id="previewMeta" class="small" style="margin-top:10px;"></div>
+        <div id="previewTotal" class="small" style="margin-top:10px; font-weight:900;"></div>
       </div>
       <div class="modalBtns">
         <button class="primary" type="button" id="exportFromPreview">PDF Export</button>
@@ -305,7 +286,7 @@ input, select{
   <!-- Print -->
   <div id="printArea">
     <div id="printTitle"></div>
-    <div id="printMeta"></div>
+    <div id="printMetaTop"></div>
 
     <table>
       <thead>
@@ -325,6 +306,8 @@ input, select{
         </tr>
       </tfoot>
     </table>
+
+    <div id="printMetaBottom"></div>
   </div>
 
 </div>
@@ -345,14 +328,15 @@ const delBtn  = document.getElementById("delBtn");
 
 const modalBack = document.getElementById("modalBack");
 const previewTitle = document.getElementById("previewTitle");
-const previewMeta  = document.getElementById("previewMeta");
 const previewTable = document.getElementById("previewTable");
+const previewTotal = document.getElementById("previewTotal");
 const closePrevTop = document.getElementById("closePrevTop");
 const closePrevBottom = document.getElementById("closePrevBottom");
 const exportFromPreview = document.getElementById("exportFromPreview");
 
 const printTitleEl = document.getElementById("printTitle");
-const printMetaEl  = document.getElementById("printMeta");
+const printMetaTopEl  = document.getElementById("printMetaTop");
+const printMetaBottomEl  = document.getElementById("printMetaBottom");
 const printBodyEl  = document.getElementById("printBody");
 const printTotalEl = document.getElementById("printTotal");
 
@@ -463,9 +447,15 @@ function timeToMinutes(t){
   if(!t) return null;
   const m=t.match(/^(\d{2}):(\d{2})$/);
   if(!m) return null;
-  const hh=parseInt(m[1],10), mm=parseInt(m[2],10);
-  if(hh>23 || mm>59) return null;
-  return hh*60 + mm;
+  return parseInt(m[1],10)*60 + parseInt(m[2],10);
+}
+
+/*** NEU: Stunden "smart" formatieren: 10 Std / 4.5 Std / 4.25 Std ***/
+function formatHoursSmart(hours){
+  if(hours == null || isNaN(hours)) return "";
+  const rounded = Math.round(hours * 100) / 100; // max 2 Nachkommastellen
+  if(Number.isInteger(rounded)) return rounded + " Std";
+  return rounded.toString() + " Std"; // entfernt unnötige Nullen automatisch
 }
 
 function autoHours(row){
@@ -480,17 +470,25 @@ function autoHours(row){
   }
   let diff=e-s;
   if(diff<0) diff+=1440;
-  out.value=(diff/60).toFixed(2);
+  const hours = diff/60;
+  out.value = formatHoursSmart(hours);
   updateTotal();
+}
+
+function parseHoursFromField(v){
+  // akzeptiert "10 Std" oder "4.5 Std" oder "4.25 Std" oder "4.50"
+  if(!v) return NaN;
+  const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : NaN;
 }
 
 function updateTotal(){
   let sum=0;
   document.querySelectorAll(".hours").forEach(i=>{
-    const v=parseFloat(String(i.value).replace(",","."));
+    const v=parseHoursFromField(i.value);
     if(!isNaN(v)) sum+=v;
   });
-  sumEl.textContent=sum.toFixed(2);
+  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
 }
 
 function getState(){
@@ -512,9 +510,11 @@ function getState(){
     exported
   };
 }
+
 function saveState(){
   localStorage.setItem(storageKey(), JSON.stringify(getState()));
 }
+
 function loadState(){
   const raw=localStorage.getItem(storageKey());
   if(!raw){ saveState(); return; }
@@ -547,7 +547,7 @@ function buildPrintTable(){
   const yy=current.getFullYear();
 
   printTitleEl.textContent=`Stundenformular – ${mm}/${yy}`+(name?` – ${name}`:"");
-  printMetaEl.textContent=`Gesamtstunden: ${sumEl.textContent}`;
+  printMetaTopEl.textContent=`Erstellt by Dr.Careless`;
 
   printBodyEl.innerHTML="";
   let sum=0;
@@ -557,25 +557,27 @@ function buildPrintTable(){
     const ort=r.querySelector(".ort").value||"";
     const start=r.querySelector(".start").value||"";
     const end=r.querySelector(".end").value||"";
-    const hrs=r.querySelector(".hours").value||"";
-    const empty=!ort&&!start&&!end&&!hrs;
+    const hrsTxt=r.querySelector(".hours").value||"";
+    const empty=!ort&&!start&&!end&&!hrsTxt;
 
     const tr=document.createElement("tr");
     if(empty) tr.className="empty";
+
+    const hrsNum = parseHoursFromField(hrsTxt);
+    if(!isNaN(hrsNum)) sum+=hrsNum;
+
     tr.innerHTML=`
       <td>${pad2(day)}</td>
       <td>${ort}</td>
       <td>${start}</td>
       <td>${end}</td>
-      <td class="right">${hrs}</td>
+      <td class="right">${hrsTxt}</td>
     `;
     printBodyEl.appendChild(tr);
-
-    const v=parseFloat(String(hrs).replace(",","."));
-    if(!isNaN(v)) sum+=v;
   });
 
-  printTotalEl.textContent=sum.toFixed(2);
+  printTotalEl.textContent = formatHoursSmart(sum);
+  printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
 }
 
 function exportPDF(){
@@ -595,7 +597,7 @@ function allesLoeschen(){
   build();
 }
 
-/*** Vorschau (Gesamtstunden UNTER Tabelle) ***/
+/*** Vorschau (mit mehr Farbe + Gesamt unten) ***/
 function openPreview(){
   const name=(nameEl.value||"").trim();
   const mm=pad2(current.getMonth()+1);
@@ -603,16 +605,17 @@ function openPreview(){
 
   previewTitle.textContent=`PDF Vorschau – ${mm}/${yy}`+(name?` – ${name}`:"");
 
+  let sum=0;
   const parts=[];
   parts.push(`
-    <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:11px;">
+    <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px;">
       <thead>
-        <tr>
-          <th style="border:1px solid #ddd; padding:6px; width:10%;">Tag</th>
-          <th style="border:1px solid #ddd; padding:6px; width:42%;">Einsatzort</th>
-          <th style="border:1px solid #ddd; padding:6px; width:16%;">Beginn</th>
-          <th style="border:1px solid #ddd; padding:6px; width:16%;">Ende</th>
-          <th style="border:1px solid #ddd; padding:6px; width:16%; text-align:right;">Stunden</th>
+        <tr style="background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));">
+          <th style="border:1px solid #ddd; padding:8px; width:10%;">Tag</th>
+          <th style="border:1px solid #ddd; padding:8px; width:42%;">Einsatzort</th>
+          <th style="border:1px solid #ddd; padding:8px; width:16%;">Beginn</th>
+          <th style="border:1px solid #ddd; padding:8px; width:16%;">Ende</th>
+          <th style="border:1px solid #ddd; padding:8px; width:16%; text-align:right;">Stunden</th>
         </tr>
       </thead>
       <tbody>
@@ -626,23 +629,23 @@ function openPreview(){
     const hrs=r.querySelector(".hours").value||"";
     const empty=!ort&&!start&&!end&&!hrs;
 
+    const v = parseHoursFromField(hrs);
+    if(!isNaN(v)) sum+=v;
+
     parts.push(`
       <tr style="${empty ? "background:#f3f4f6;" : ""}">
-        <td style="border:1px solid #ddd; padding:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pad2(day)}</td>
-        <td style="border:1px solid #ddd; padding:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
-        <td style="border:1px solid #ddd; padding:6px; white-space:nowrap;">${start}</td>
-        <td style="border:1px solid #ddd; padding:6px; white-space:nowrap;">${end}</td>
-        <td style="border:1px solid #ddd; padding:6px; text-align:right; white-space:nowrap;">${hrs}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pad2(day)}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
+        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs}</td>
       </tr>
     `);
   });
 
   parts.push(`</tbody></table>`);
   previewTable.innerHTML=parts.join("");
-
-  // Gesamtstunden unter die Tabelle
-  previewMeta.textContent=`Gesamtstunden: ${sumEl.textContent}`;
-
+  previewTotal.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
   modalBack.style.display="block";
 }
 function closePreview(){ modalBack.style.display="none"; }
