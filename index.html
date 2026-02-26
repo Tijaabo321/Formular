@@ -193,39 +193,59 @@ input, select{
   border-top:1px solid var(--border);
 }
 
-/* PRINT: 1 Seite (kompakt) */
-@page{ size:A4 landscape; margin:4mm; }
+/* =========================
+   PRINT: 1 Seite (GARANTIERT)
+   ========================= */
+
+/* (ÄNDERUNG 1) minimal kleinere Ränder */
+@page{ size:A4 landscape; margin:3mm; }
 #printArea{ display:none; }
 
 @media print{
   body{ background:#fff; }
+
+  /* UI ausblenden wie vorher */
   .topbar, .card, .total, #rows, .modalBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
-  #printTitle{ font-size:12pt; font-weight:1000; margin:0 0 2mm 0; }
-  #printMetaTop{ font-size:9pt; margin:0 0 2mm 0; }
-  #printMetaBottom{ font-size:9pt; margin:2mm 0 0 0; }
+  /* (ÄNDERUNG 2) harte Garantie: leicht skalieren (Chrome/Edge) + Fallback */
+  #printArea{
+    zoom: 0.92;               /* Chrome/Edge/Android */
+    transform: scale(0.92);   /* Fallback */
+    transform-origin: top left;
+    width: 108.7%;            /* gleicht Scale aus, damit Breite voll genutzt wird */
+  }
 
+  /* (ÄNDERUNG 3) Titel/Meta kompakter */
+  #printTitle{ font-size:11pt; font-weight:1000; margin:0 0 1.5mm 0; }
+  #printMetaTop{ font-size:8.5pt; margin:0 0 1.5mm 0; }
+  #printMetaBottom{ font-size:8.5pt; margin:1.5mm 0 0 0; }
+
+  /* (ÄNDERUNG 4) Tabelle kompakter -> 31 Zeilen passen */
   table{
     width:100%;
     border-collapse:collapse;
     table-layout:fixed;
-    font-size:10pt;
-    line-height:1.12;
+    font-size:9pt;
+    line-height:1.02;
   }
   th, td{
     border:1px solid #111;
-    padding:3px 5px;
+    padding:2px 4px;
     vertical-align:middle;
     overflow:hidden;
     white-space:nowrap;
     text-overflow:ellipsis;
   }
   th{ background:#eaeaea; font-weight:900; }
+
+  /* verhindert Umbruch innerhalb Zeilen/Head/Footer */
+  thead{ display:table-header-group; }
+  tfoot{ display:table-footer-group; }
+  tr{ page-break-inside:avoid; }
   .right{ text-align:right; }
   .empty td{ background:#f3f4f6; }
-  tr{ page-break-inside:avoid; }
 }
 </style>
 </head>
@@ -253,7 +273,7 @@ input, select{
         <select id="month"></select>
         <select id="year"></select>
       </div>
-      <div class="small">Erstellt von Sad</div>
+      <div class="small">Erstellt von Sadak</div>
     </div>
 
     <div class="cardDivider"></div>
@@ -450,12 +470,12 @@ function timeToMinutes(t){
   return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
 
-/*** NEU: Stunden "smart" formatieren: 10 Std / 4.5 Std / 4.25 Std ***/
+/*** Stunden "smart" formatieren: 10 Std / 4.5 Std / 4.25 Std ***/
 function formatHoursSmart(hours){
   if(hours == null || isNaN(hours)) return "";
-  const rounded = Math.round(hours * 100) / 100; // max 2 Nachkommastellen
+  const rounded = Math.round(hours * 100) / 100;
   if(Number.isInteger(rounded)) return rounded + " Std";
-  return rounded.toString() + " Std"; // entfernt unnötige Nullen automatisch
+  return rounded.toString() + " Std";
 }
 
 function autoHours(row){
@@ -476,7 +496,6 @@ function autoHours(row){
 }
 
 function parseHoursFromField(v){
-  // akzeptiert "10 Std" oder "4.5 Std" oder "4.25 Std" oder "4.50"
   if(!v) return NaN;
   const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
   return m ? parseFloat(m[1]) : NaN;
@@ -671,4 +690,3 @@ build();
 </script>
 </body>
 </html>
-
