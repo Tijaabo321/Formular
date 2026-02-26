@@ -40,7 +40,7 @@ body{
 }
 .btnrow{
   display:grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr; /* + Senden */
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap:8px;
 }
 button{
@@ -70,9 +70,7 @@ button.send{
 }
 button:disabled{ opacity:.55; cursor:not-allowed; }
 
-.small{ font-size:12px; color:var(--muted); margin-top:6px; }
-
-/* Card (Header) */
+/* Card */
 .card{
   margin-top:10px;
   background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.12));
@@ -98,55 +96,73 @@ input, select{
   background:#fff;
 }
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
-/* ====== B1: Tabelle (Swipe) ====== */
+/* ====== TABLE (B1) ====== */
 .tableCard{
   margin-top:10px;
   background:#fff;
   border:1px solid var(--border);
   border-radius:18px;
-  box-shadow:0 6px 16px rgba(0,0,0,.05);
+  box-shadow:0 8px 18px rgba(0,0,0,.06);
   overflow:hidden;
 }
-.tableTopLine{
-  height:6px;
-  background:linear-gradient(90deg, var(--accent), var(--accent2));
+
+/* Scroll-Container (macht es auf Handy angenehm) */
+.tableScroll{
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 310px);
 }
-.tableWrap{
-  overflow-x:auto; /* <<< Swipe auf Handy */
-}
-table.mainTable{
+
+/* Tabelle insgesamt schmaler */
+.mainTable{
   width:100%;
-  min-width:760px; /* <<< wichtig fürs Swipe-Feeling */
-  border-collapse:collapse;
+  border-collapse:separate;
+  border-spacing:0;
   table-layout:fixed;
+  min-width:620px; /* <<< SCHMALER (vorher oft 760) */
+  font-size:15px;
 }
-table.mainTable th, table.mainTable td{
+
+/* Sticky Header */
+.mainTable thead th{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
   border-bottom:1px solid var(--border);
-  padding:10px;
+}
+
+.mainTable th, .mainTable td{
+  padding:8px 6px; /* <<< KOMPAKTER */
+  border-bottom:1px solid rgba(226,232,240,.9);
   vertical-align:middle;
   white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
-table.mainTable th{
-  background:linear-gradient(90deg, rgba(79,70,229,.08), rgba(6,182,212,.06));
+.mainTable th{
   font-weight:1000;
-  color:#111827;
 }
-td.right{ text-align:right; }
-td.dateCell b{ font-size:15px; }
-td.dateCell{ color:#0f172a; }
-td.stunden input{
+
+.mainTable tr:last-child td{ border-bottom:none; }
+
+.cellDay{ font-weight:1000; }
+.cellRight{ text-align:right; font-weight:1000; }
+
+.mainTable select,
+.mainTable input[type="time"],
+.mainTable input[readonly]{
+  padding:8px;            /* <<< KOMPAKTER */
+  font-size:15px;         /* iOS zoomt sonst rein */
+  border-radius:12px;
+}
+
+.hoursField{
   text-align:right;
   font-weight:1000;
   background:#f8fafc;
-}
-.mainTable select, .mainTable input[type="time"], .mainTable input[readonly]{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  font-size:16px;
-  background:#fff;
 }
 
 /* Total */
@@ -282,16 +298,15 @@ td.stunden input{
 
   <!-- B1 Tabelle -->
   <div class="tableCard">
-    <div class="tableTopLine"></div>
-    <div class="tableWrap">
-      <table class="mainTable">
+    <div class="tableScroll" id="tableScroll">
+      <table class="mainTable" id="mainTable">
         <thead>
           <tr>
-            <th style="width:140px;">Tag</th>
-            <th style="width:260px;">Einsatzort</th>
-            <th style="width:150px;">von</th>
-            <th style="width:150px;">bis</th>
-            <th style="width:130px; text-align:right;">Stunden</th>
+            <th style="width:120px;">Tag</th>
+            <th style="width:200px;">Ort</th>
+            <th style="width:110px;">von</th>
+            <th style="width:110px;">bis</th>
+            <th style="width:90px; text-align:right;">Std</th>
           </tr>
         </thead>
         <tbody id="rowsBody"></tbody>
@@ -353,21 +368,27 @@ td.stunden input{
 <script>
 /* =========================================================
    HIER EINTRAGEN:
-   1) Apps Script WebApp EXEC Link (muss mit /exec enden)
-   2) PIN fürs Öffnen (Hinweis: clientseitig = nur "leicht")
+   deinen Apps Script WebApp EXEC Link (muss mit /exec enden)
    ========================================================= */
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
-const PIN_CODE    = "8558"; // <<< HIER PIN ÄNDERN
+
+/* =========================================================
+   PIN / PASSWORT (nur leichter Schutz)
+   -> ÄNDERE HIER deinen PIN
+   ========================================================= */
+const APP_PIN = "8558";
 
 /* ====== Rest wie gehabt ====== */
 const ORTE = ["Niendorf Nord","Hagenbecks Tierpark","Farmsen","Ochsenzoll"];
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
+const PIN_SESSION_KEY = "sad_pin_ok_v1";
 
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
 const yearEl  = document.getElementById("year");
-const rowsBodyEl = document.getElementById("rowsBody");
 const sumEl   = document.getElementById("sum");
+
+const rowsBodyEl = document.getElementById("rowsBody");
 
 const pdfBtn  = document.getElementById("pdfBtn");
 const prevBtn = document.getElementById("prevBtn");
@@ -403,31 +424,20 @@ function markDirty(){
   pdfBtn.disabled=false;
 }
 
-function ensurePinGate(){
-  // schon freigeschaltet in dieser Session?
-  if(sessionStorage.getItem("sad_pin_ok") === "1") return;
+/* ===== PIN Gate ===== */
+function ensurePin(){
+  const ok = sessionStorage.getItem(PIN_SESSION_KEY);
+  if(ok === "1") return true;
 
-  const triesMax = 3;
-  for(let i=0;i<triesMax;i++){
-    const pin = prompt("PIN eingeben:");
-    if(pin === null) { /* Abbrechen */ break; }
-    if(pin === PIN_CODE){
-      sessionStorage.setItem("sad_pin_ok","1");
-      return;
-    }
-    alert("Falscher PIN");
+  const entered = prompt("Bitte PIN eingeben:");
+  if(entered === null) return false;
+
+  if(String(entered).trim() === APP_PIN){
+    sessionStorage.setItem(PIN_SESSION_KEY, "1");
+    return true;
   }
-
-  // Wenn nicht ok: Seite “sperren”
-  document.body.innerHTML = `
-    <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; font-family:system-ui;">
-      <div style="max-width:520px; width:100%; background:#fff; border:1px solid #e2e8f0; border-radius:18px; padding:18px; box-shadow:0 12px 28px rgba(0,0,0,.10);">
-        <h2 style="margin:0 0 10px 0;">Zugriff gesperrt</h2>
-        <div style="color:#64748b; margin-bottom:12px;">Bitte Seite neu laden und PIN korrekt eingeben.</div>
-        <button onclick="location.reload()" style="width:100%; padding:12px; border-radius:14px; border:1px solid #e2e8f0; font-weight:900; cursor:pointer;">Neu laden</button>
-      </div>
-    </div>
-  `;
+  alert("Falscher PIN.");
+  return false;
 }
 
 function fillMonthYear(){
@@ -445,7 +455,7 @@ function fillMonthYear(){
   for(let i=nowY-3;i<=nowY+6;i++){
     const o=document.createElement("option");
     o.value=String(i);
-    o.textContent=String(i);
+    o.textContent=String(i).slice(-2); /* <<< 2026 wird als 26 angezeigt */
     yearEl.appendChild(o);
   }
 
@@ -453,31 +463,26 @@ function fillMonthYear(){
   yearEl.value=String(current.getFullYear());
 }
 
-function formatDateLabel(day, m, y){
-  return `${pad2(day)}.${pad2(m)}.${y}`;
-}
-
+/* ===== Times / Hours ===== */
 function timeToMinutes(t){
   if(!t) return null;
   const m=t.match(/^(\d{2}):(\d{2})$/);
   if(!m) return null;
   return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
-
 function formatHoursSmart(hours){
   if(hours == null || isNaN(hours)) return "";
   const rounded = Math.round(hours * 100) / 100;
   if(Number.isInteger(rounded)) return rounded + " Std";
   return rounded.toString() + " Std";
 }
-
 function parseHoursFromField(v){
   if(!v) return NaN;
   const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
   return m ? parseFloat(m[1]) : NaN;
 }
 
-function autoHoursForTr(tr){
+function autoHours(tr){
   const s=timeToMinutes(tr.querySelector(".start").value);
   const e=timeToMinutes(tr.querySelector(".end").value);
   const out=tr.querySelector(".hours");
@@ -495,13 +500,14 @@ function autoHoursForTr(tr){
 
 function updateTotal(){
   let sum=0;
-  document.querySelectorAll("#rowsBody .hours").forEach(i=>{
+  document.querySelectorAll(".hours").forEach(i=>{
     const v=parseHoursFromField(i.value);
     if(!isNaN(v)) sum+=v;
   });
   sumEl.textContent = formatHoursSmart(sum) || "0 Std";
 }
 
+/* ===== Build Table ===== */
 function build(){
   fillMonthYear();
 
@@ -515,23 +521,18 @@ function build(){
     const tr=document.createElement("tr");
     tr.dataset.day=String(d);
 
-    tr.innerHTML=`
-      <td class="dateCell">
-        <b>${formatDateLabel(d,m,y)}</b>
-      </td>
-
+    tr.innerHTML = `
+      <td class="cellDay">${pad2(d)}.${pad2(m)}.${y}</td>
       <td>
         <select class="ort">
           <option value="" selected disabled>Standort wählen</option>
           ${ORTE.map(o=>`<option value="${o}">${o}</option>`).join("")}
         </select>
       </td>
-
       <td><input type="time" class="start"></td>
       <td><input type="time" class="end"></td>
-
-      <td class="stunden right">
-        <input type="text" class="hours" placeholder="—" readonly>
+      <td class="cellRight">
+        <input type="text" class="hours hoursField" placeholder="Std" readonly>
       </td>
     `;
 
@@ -541,8 +542,8 @@ function build(){
     const hours=tr.querySelector(".hours");
 
     ort.addEventListener("change", ()=>{ markDirty(); saveState(); });
-    start.addEventListener("change", ()=>{ autoHoursForTr(tr); markDirty(); saveState(); });
-    end.addEventListener("change", ()=>{ autoHoursForTr(tr); markDirty(); saveState(); });
+    start.addEventListener("change", ()=>{ autoHours(tr); markDirty(); saveState(); });
+    end.addEventListener("change", ()=>{ autoHours(tr); markDirty(); saveState(); });
     hours.addEventListener("focus",(e)=>e.target.blur());
 
     rowsBodyEl.appendChild(tr);
@@ -563,6 +564,7 @@ function applyMonthAuto(){
   build();
 }
 
+/* ===== State ===== */
 function getState(){
   const rows=[];
   document.querySelectorAll("#rowsBody tr").forEach(tr=>{
@@ -574,6 +576,7 @@ function getState(){
       hours: tr.querySelector(".hours").value||""
     });
   });
+
   return {
     name: nameEl.value||"",
     monthKey: ymKey(current),
@@ -585,11 +588,9 @@ function getState(){
     exported
   };
 }
-
 function saveState(){
   localStorage.setItem(storageKey(), JSON.stringify(getState()));
 }
-
 function loadState(){
   const raw=localStorage.getItem(storageKey());
   if(!raw){ saveState(); return; }
@@ -601,7 +602,6 @@ function loadState(){
     const rowEls=document.querySelectorAll("#rowsBody tr");
     (st.rows||[]).forEach((r, idx)=>{
       if(!rowEls[idx]) return;
-
       const ortSel=rowEls[idx].querySelector(".ort");
       if(r.ort) ortSel.value=r.ort; else ortSel.selectedIndex=0;
 
@@ -617,6 +617,7 @@ function loadState(){
   }
 }
 
+/* ===== Print ===== */
 function buildPrintTable(){
   const name=(nameEl.value||"").trim();
   const mm=pad2(current.getMonth()+1);
@@ -673,7 +674,7 @@ function allesLoeschen(){
   build();
 }
 
-/*** Vorschau (wie gehabt) ***/
+/* ===== Preview ===== */
 function openPreview(){
   const name=(nameEl.value||"").trim();
   const mm=pad2(current.getMonth()+1);
@@ -710,7 +711,7 @@ function openPreview(){
 
     parts.push(`
       <tr style="${empty ? "background:#f3f4f6;" : ""}">
-        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${pad2(day)}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${pad2(day)}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
@@ -726,16 +727,16 @@ function openPreview(){
 }
 function closePreview(){ modalBack.style.display="none"; }
 
-/* ===== Senden (wie gehabt, plus Hinweis) ===== */
+/* ===== Senden ===== */
 async function senden(){
-  // Hinweis VOR dem Senden
-  const ok = confirm("Hinweis: Bitte sende nur EINMAL im Monat deine Stunden (nicht täglich). \n\nJetzt senden?");
-  if(!ok) return;
-
   if(!WEB_APP_URL || WEB_APP_URL.includes("HIER_DEIN_EXEC_LINK")){
     alert("Bitte erst den WEB_APP_URL (exec Link) im Code eintragen.");
     return;
   }
+
+  // Hinweis (nur Text, nichts kaputt)
+  const ok = confirm("Hinweis: Bitte sende deine Stunden nur 1x im Monat (nicht täglich). Jetzt senden?");
+  if(!ok) return;
 
   const payload = getState();
 
@@ -746,10 +747,9 @@ async function senden(){
   try{
     await fetch(WEB_APP_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" }, // kein Preflight
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
-
     alert("Gesendet ✅");
   }catch(err){
     console.error(err);
@@ -777,9 +777,13 @@ yearEl.addEventListener("change", applyMonthAuto);
 nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 
 /*** START ***/
-ensurePinGate();
-fillMonthYear();
-build();
+if(ensurePin()){
+  fillMonthYear();
+  build();
+}else{
+  // wenn PIN abgebrochen: Seite leer lassen
+  document.body.innerHTML = "";
+}
 </script>
 </body>
 </html>
