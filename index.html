@@ -63,6 +63,7 @@ button.danger{
   border-color:rgba(239,68,68,.55);
   background:#fff;
 }
+.small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
 /* Card */
 .card{
@@ -74,12 +75,23 @@ button.danger{
   box-shadow:0 8px 18px rgba(0,0,0,.06);
 }
 
-/* NEU: Kopfbereich deutlicher absetzen */
+/* Kopfbereich deutlicher + mehr Farbe */
 .card.headerCard{
-  background:linear-gradient(135deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
-  border:1px solid rgba(79,70,229,.18);
-  box-shadow:0 10px 22px rgba(0,0,0,.08);
+  background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.14));
+  border:1px solid rgba(79,70,229,.22);
+  box-shadow:0 12px 26px rgba(0,0,0,.10);
+  position:relative;
+  overflow:hidden;
 }
+.card.headerCard::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(700px 220px at 10% 0%, rgba(79,70,229,.20), transparent 60%),
+             radial-gradient(700px 220px at 90% 0%, rgba(6,182,212,.18), transparent 60%);
+  pointer-events:none;
+}
+.card.headerCard > *{ position:relative; z-index:1; }
 
 label{ font-weight:900; }
 input, select{
@@ -91,7 +103,15 @@ input, select{
   background:#fff;
 }
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.small{ font-size:12px; color:var(--muted); margin-top:6px; }
+
+/* NEU: Trennlinie zwischen Kopf und Tagen */
+.sectionDivider{
+  margin:12px 2px 8px;
+  height:1px;
+  background:linear-gradient(90deg, rgba(79,70,229,.45), rgba(6,182,212,.45));
+  border-radius:999px;
+  box-shadow:0 6px 16px rgba(0,0,0,.06);
+}
 
 /* Day rows */
 .row{
@@ -199,7 +219,7 @@ input, select{
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, #rows, .modalBack{ display:none !important; }
+  .topbar, .card, .total, #rows, .modalBack, .sectionDivider{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
@@ -240,7 +260,6 @@ input, select{
     </div>
   </div>
 
-  <!-- Kopf-Bereich farblich abgesetzt -->
   <div class="card headerCard">
     <div>
       <label>Name:</label>
@@ -253,8 +272,11 @@ input, select{
         <select id="month"></select>
         <select id="year"></select>
       </div>
+      <div class="small">Erstellt by Dr.Careless</div>
     </div>
   </div>
+
+  <div class="sectionDivider"></div>
 
   <div id="rows"></div>
 
@@ -270,8 +292,8 @@ input, select{
         <button type="button" id="closePrevTop" style="width:auto; padding:10px 12px;">Schließen</button>
       </div>
       <div class="modalBody">
-        <div id="previewMeta" class="small" style="margin-bottom:10px;"></div>
         <div id="previewTable"></div>
+        <div id="previewMeta" class="small" style="margin-top:10px;"></div>
       </div>
       <div class="modalBtns">
         <button class="primary" type="button" id="exportFromPreview">PDF Export</button>
@@ -417,7 +439,6 @@ function build(){
     ort.addEventListener("change", ()=>{ markDirty(); saveState(); });
     start.addEventListener("change", ()=>{ autoHours(row); markDirty(); saveState(); });
     end.addEventListener("change", ()=>{ autoHours(row); markDirty(); saveState(); });
-
     hours.addEventListener("focus",(e)=>e.target.blur());
 
     rowsEl.appendChild(row);
@@ -491,11 +512,9 @@ function getState(){
     exported
   };
 }
-
 function saveState(){
   localStorage.setItem(storageKey(), JSON.stringify(getState()));
 }
-
 function loadState(){
   const raw=localStorage.getItem(storageKey());
   if(!raw){ saveState(); return; }
@@ -576,14 +595,13 @@ function allesLoeschen(){
   build();
 }
 
-/*** Vorschau ***/
+/*** Vorschau (Gesamtstunden UNTER Tabelle) ***/
 function openPreview(){
   const name=(nameEl.value||"").trim();
   const mm=pad2(current.getMonth()+1);
   const yy=current.getFullYear();
 
   previewTitle.textContent=`PDF Vorschau – ${mm}/${yy}`+(name?` – ${name}`:"");
-  previewMeta.textContent=`Gesamtstunden: ${sumEl.textContent}`;
 
   const parts=[];
   parts.push(`
@@ -621,6 +639,10 @@ function openPreview(){
 
   parts.push(`</tbody></table>`);
   previewTable.innerHTML=parts.join("");
+
+  // Gesamtstunden unter die Tabelle
+  previewMeta.textContent=`Gesamtstunden: ${sumEl.textContent}`;
+
   modalBack.style.display="block";
 }
 function closePreview(){ modalBack.style.display="none"; }
