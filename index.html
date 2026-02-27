@@ -664,7 +664,7 @@ function build(){
     const tr = document.createElement("tr");
     tr.dataset.day = String(d);
 
-    const shortDate = `${pad2(d)}.${pad2(m)}`;
+   const shortDate = `${pad2(d)}.${pad2(m)}.${String(current.getFullYear()).slice(-2)}`;
 
     tr.innerHTML = `
       <td><b>${shortDate}</b></td>
@@ -1057,5 +1057,6 @@ nameEl.addEventListener("input", ()=>{
 </script>
 </body>
 </html>
+
 
 
