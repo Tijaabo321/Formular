@@ -15,7 +15,8 @@
   --danger:#ef4444;
   --accent:#4f46e5;
   --accent2:#06b6d4;
-  --shadow: 0 12px 28px rgba(0,0,0,.10);
+  --shadow: 0 14px 34px rgba(0,0,0,.10);
+  --shadow2: 0 8px 18px rgba(0,0,0,.06);
 }
 *{ box-sizing:border-box; }
 body{
@@ -36,7 +37,7 @@ body{
   border-radius:18px;
   padding:10px;
   box-shadow:var(--shadow);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
 }
 .btnrow{
   display:grid;
@@ -52,7 +53,9 @@ button{
   font-size:15px;
   cursor:pointer;
   background:#fff;
+  transition: transform .08s ease, box-shadow .12s ease;
 }
+button:active{ transform: scale(.99); }
 button.primary{
   background:linear-gradient(135deg, #111827, #1f2937);
   color:#fff;
@@ -78,7 +81,7 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
   border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   padding:14px;
-  box-shadow:0 8px 18px rgba(0,0,0,.06);
+  box-shadow:var(--shadow2);
 }
 .cardDivider{
   height:2px;
@@ -100,147 +103,191 @@ input, select{
 
 /* Total */
 .total{
+  position:sticky;
+  bottom:10px;
+  z-index:40;
   margin-top:12px;
-  background:#fff;
-  border:1px solid var(--border);
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(226,232,240,.9);
   border-radius:18px;
   padding:14px;
   font-size:22px;
   font-weight:1000;
   text-align:center;
-  box-shadow:0 -10px 22px rgba(0,0,0,.06);
+  box-shadow:var(--shadow);
+  backdrop-filter: blur(8px);
 }
 
 /* =========================
-   HAUPTSEITE: TABELLE (EDITIERBAR)
+   HAUPTSEITE: TABELLE (modern + horizontal scroll)
    ========================= */
 .tableWrap{
   margin-top:10px;
-  background:#fff;
-  border:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(255,255,255,.95), #fff);
+  border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   overflow:hidden;
-  box-shadow:0 6px 16px rgba(0,0,0,.05);
+  box-shadow:var(--shadow2);
 }
+
+/* Scroll container */
+.tableScroll{
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  position:relative;
+}
+
+/* hübscher “scroll hint” (nur optisch) */
+.tableScroll::after{
+  content:"";
+  pointer-events:none;
+  position:absolute;
+  top:0; right:0; bottom:0;
+  width:26px;
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.95));
+}
+
+/* Table */
 .entryTable{
   width:100%;
-  border-collapse:collapse;
+  border-collapse:separate;
+  border-spacing:0;
   table-layout:fixed;
+  min-width: 680px; /* <<< sorgt dafür, dass Handy sauber horizontal scrollt */
 }
 .entryTable thead th{
   position:sticky;
   top:0;
-  z-index:5;
+  z-index:10;
   background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
   font-weight:1000;
   font-size:13px;
-  padding:8px 6px;
-  border-bottom:1px solid var(--border);
-}
-.entryTable td{
-  padding:8px 6px;
-  border-bottom:1px solid var(--border);
-  vertical-align:middle;
+  padding:10px 8px;
+  border-bottom:1px solid rgba(226,232,240,.95);
+  color:#0b1220;
 }
 
-/* Inputs in Tabelle */
+/* Zellen */
+.entryTable td{
+  padding:10px 8px;
+  border-bottom:1px solid rgba(226,232,240,.85);
+  vertical-align:middle;
+  background:#fff;
+}
+
+/* Zebra (sehr soft) */
+.entryTable tbody tr:nth-child(even) td{
+  background:#fbfcff;
+}
+
+/* Sticky Tag-Spalte */
+.entryTable th.colDay,
+.entryTable td.colDay{
+  position:sticky;
+  left:0;
+  z-index:9;
+}
+.entryTable thead th.colDay{ z-index:12; }
+.entryTable td.colDay{
+  font-weight:1000;
+  background:linear-gradient(180deg, #ffffff, #fbfcff);
+  border-right:1px solid rgba(226,232,240,.75);
+}
+
+/* Sticky Stunden-Spalte (rechts) */
+.entryTable th.colStd,
+.entryTable td.colStd{
+  position:sticky;
+  right:0;
+  z-index:9;
+}
+.entryTable thead th.colStd{ z-index:12; }
+.entryTable td.colStd{
+  background:linear-gradient(180deg, #ffffff, #fbfcff);
+  border-left:1px solid rgba(226,232,240,.75);
+}
+
+/* Inputs modern */
 .entryTable select,
 .entryTable input[type="time"]{
   width:100%;
-  padding:8px 10px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  font-size:14px;
+  padding:10px 12px;
+  border-radius:16px;
+  border:1px solid rgba(226,232,240,.95);
+  font-size:15px;
   background:#fff;
+  box-shadow: inset 0 1px 0 rgba(15,23,42,.03);
+}
+.entryTable select{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .entryHours{
   width:100%;
-  padding:8px 10px;
-  border-radius:14px;
-  border:1px solid var(--border);
+  padding:10px 12px;
+  border-radius:16px;
+  border:1px solid rgba(226,232,240,.95);
   background:#f8fafc;
-  font-weight:900;
-  font-size:14px;
+  font-weight:1000;
+  font-size:15px;
   text-align:right;
 }
 .right{ text-align:right; }
 
-/* Spaltenbreiten Desktop/Tablet */
-.colDay{ width:64px; }
-.colOrt{ width:auto; }
-.colTime{ width:84px; }
-.colStd{ width:92px; }
+/* Spaltenbreiten */
+.colDay{ width:70px; }
+.colOrt{ width:280px; }   /* <<< mehr Platz für Auswahl */
+.colTime{ width:120px; }  /* Time inputs brauchen Platz */
+.colStd{ width:120px; }
 
 /* Active row highlight */
 .trActive td{
-  background: linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  background: linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08)) !important;
 }
-.trActive td:first-child{
+.trActive td.colDay{
   box-shadow: inset 4px 0 0 rgba(79,70,229,.65);
 }
 
-/* =========================
-   ✅ MOBILE (B): Karten statt Horizontal-Scroll
-   ========================= */
-@media (max-width: 480px){
-  .tableWrap{ overflow:visible; background:transparent; border:0; box-shadow:none; }
-  .entryTable{ border-collapse:separate; border-spacing:0 10px; table-layout:auto; }
-  .entryTable thead{ display:none; }
-
-  .entryTable tbody tr{
-    display:block;
-    background:#fff;
-    border:1px solid var(--border);
-    border-radius:18px;
-    box-shadow:0 6px 16px rgba(0,0,0,.05);
-    overflow:hidden;
-  }
-
-  .entryTable tbody td{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    border-bottom:1px solid var(--border);
-    padding:10px 12px;
-  }
-  .entryTable tbody td:last-child{ border-bottom:0; }
-
-  /* Label links, Feld rechts */
-  .entryTable tbody td::before{
-    content: attr(data-label);
-    flex:0 0 84px;
-    font-weight:1000;
-    color:var(--muted);
-    font-size:12.5px;
-  }
-
-  /* Datum-Zeile als "Header" der Karte */
-  .entryTable tbody td[data-role="day"]{
-    background:linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
-  }
-  .entryTable tbody td[data-role="day"]::before{
-    content:"Tag";
-    color:var(--text);
-  }
-  .entryTable tbody td[data-role="day"] b{
-    font-size:16px;
-  }
-
-  /* Inputs auf Mobile etwas kompakter */
-  .entryTable select,
-  .entryTable input[type="time"],
-  .entryHours{
-    padding:10px 12px;
-    font-size:15px;
-    border-radius:16px;
-  }
-
-  /* Active row markanter */
-  .trActive{
-    outline:2px solid rgba(79,70,229,.25);
-    outline-offset:2px;
-    border-radius:18px;
-  }
+/* Preview modal */
+.modalBack{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  z-index:200;
+  padding:14px;
+}
+.modal{
+  max-width:900px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.modalTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border-bottom:1px solid var(--border);
+}
+.modalBody{
+  padding:12px;
+  max-height:70vh;
+  overflow:auto;
+}
+.modalBtns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:12px;
+  border-top:1px solid var(--border);
 }
 
 /* =========================
@@ -287,46 +334,6 @@ input, select{
   tr{ page-break-inside:avoid; }
   .right{ text-align:right; }
   .empty td{ background:#f3f4f6; }
-}
-
-/* Preview modal */
-.modalBack{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,.45);
-  z-index:200;
-  padding:14px;
-}
-.modal{
-  max-width:900px;
-  margin:0 auto;
-  background:#fff;
-  border-radius:18px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
-.modalTop{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:12px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
-  border-bottom:1px solid var(--border);
-}
-.modalBody{
-  padding:12px;
-  max-height:70vh;
-  overflow:auto;
-}
-.modalBtns{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  padding:12px;
-  border-top:1px solid var(--border);
 }
 
 /* PIN Overlay */
@@ -402,18 +409,20 @@ input, select{
 
   <!-- HAUPTSEITE: EDITIER-TABELLE -->
   <div class="tableWrap">
-    <table class="entryTable">
-      <thead>
-        <tr>
-          <th class="colDay">Tag</th>
-          <th class="colOrt">Kehre</th>
-          <th class="colTime">Beginn</th>
-          <th class="colTime">Ende</th>
-          <th class="colStd right">Stunden</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <div class="tableScroll">
+      <table class="entryTable">
+        <thead>
+          <tr>
+            <th class="colDay">Tag</th>
+            <th class="colOrt">Kehre</th>
+            <th class="colTime">Beginn</th>
+            <th class="colTime">Ende</th>
+            <th class="colStd right">Stunden</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
   </div>
 
   <div class="total">
@@ -547,7 +556,7 @@ function fillMonthYear(){
   for(let i=nowY-3;i<=nowY+6;i++){
     const o=document.createElement("option");
     o.value=String(i);
-    o.textContent=String(i).slice(-2);
+    o.textContent=String(i).slice(-2); // Anzeige: 26
     yearEl.appendChild(o);
   }
 
@@ -572,19 +581,19 @@ function build(){
     const shortDate = `${pad2(d)}.${pad2(m)}`;
 
     tr.innerHTML = `
-      <td data-label="Tag" data-role="day"><b>${shortDate}</b></td>
+      <td class="colDay"><b>${shortDate}</b></td>
 
-      <td data-label="Kehre">
+      <td class="colOrt">
         <select class="ort">
           <option value="" selected disabled>Wählen</option>
           ${ORTE.map(o=>`<option value="${o}">${o}</option>`).join("")}
         </select>
       </td>
 
-      <td data-label="Beginn"><input type="time" class="start"></td>
-      <td data-label="Ende"><input type="time" class="end"></td>
+      <td class="colTime"><input type="time" class="start"></td>
+      <td class="colTime"><input type="time" class="end"></td>
 
-      <td data-label="Stunden" class="right">
+      <td class="colStd right">
         <input type="text" class="hours entryHours" placeholder="0 Std" readonly>
       </td>
     `;
