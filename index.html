@@ -177,6 +177,20 @@ input, select{
   vertical-align:middle;
 }
 
+.entryTable th,
+.entryTable td{
+  border-right: 1px solid rgba(109,40,217,.08);
+}
+
+.entryTable th:last-child,
+.entryTable td:last-child{
+  border-right: none;
+}
+
+.entryTable td{
+  border-bottom: 1px solid rgba(109,40,217,.06);
+}  
+
 .entryTable select,
 .entryTable input[type="time"]{
   width:100%;
@@ -1004,5 +1018,6 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 </script>
 </body>
 </html>
+
 
 
