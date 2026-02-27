@@ -187,8 +187,6 @@ input, select{
   font-size:14px;
   background:#fff;
 }
-
-/* ✅ Stundenfeld: zentriert & nur Zahl (kein "Std") */
 .entryHours{
   width:100%;
   padding:9px 10px;
@@ -197,9 +195,8 @@ input, select{
   background:#f8fafc;
   font-weight:900;
   font-size:14px;
-  text-align:center; /* ✅ zentriert */
+  text-align:right;
 }
-
 .right{ text-align:right; }
 
 /* Spaltenbreiten: maximal tight, aber NICHT kollidierend */
@@ -207,6 +204,16 @@ input, select{
 .colKehre{ width:190px; } /* reicht bis "H. Tierpark" */
 .colTime{ width:120px; }  /* genug für time-input ohne quetschen */
 .colStd{ width:120px; }   /* Stundenfeld ohne quetschen */
+
+/* ===== NEU (Option B): Preset Select + "Andere" Time Input ===== */
+.timeCell{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.timeOther{
+  display:none; /* wird per JS ein/ausgeblendet */
+}
 
 /* Active row highlight */
 .trActive td{
@@ -429,7 +436,7 @@ input, select{
             <th class="colKehre">KEHRE</th>
             <th class="colTime">Beginn</th>
             <th class="colTime">Ende</th>
-            <th class="colStd">Stunden</th>
+            <th class="colStd right">Stunden</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -497,8 +504,7 @@ input, select{
    ========================================================= */
 const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";  // z.B. https://script.google.com/macros/s/.../exec
 const APP_PIN     = "1234";                // PIN
-const PIN_BG_FILE = "test.jpg";            // <== Bild-Dateiname im Repo (keine URL!)
-
+const PIN_BG_FILE = "test.jpg";            // <== HIER: Bild-Dateiname im Repo (keine URL!)
 /* ========================================================= */
 
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
@@ -509,6 +515,11 @@ const ORTE = [
   { value: "Farmsen",               short: "Farmsen" },
   { value: "Ochsenzoll",            short: "Ochsenzoll" }
 ];
+
+/* ===== NEU (Option B): feste Zeiten + Andere... ===== */
+const START_PRESETS = ["21:00","22:00","23:00"];
+const END_PRESETS   = ["06:00","07:00","08:00"];
+const OTHER_VALUE   = "__OTHER__";
 
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
@@ -605,6 +616,38 @@ function restoreFullLabel(selectEl){
   if(full) opt.textContent = full;
 }
 
+/* ===== NEU (Option B): Preset/Other Sync ===== */
+function presetOptionsHtml(presets){
+  return presets.map(t => `<option value="${t}">${t}</option>`).join("");
+}
+function applyPresetSelect(selectEl, timeInput, presets){
+  const v = selectEl.value;
+  if(v === OTHER_VALUE){
+    timeInput.classList.add("timeOther"); // bleibt time input, aber wir schalten sichtbar:
+    timeInput.style.display = "block";
+    // NICHT überschreiben: user kann beliebig wählen
+    return;
+  }
+  // Preset gewählt => in time input schreiben + input verstecken
+  timeInput.value = v;
+  timeInput.style.display = "none";
+}
+function applyFromTimeToSelect(selectEl, timeInput, presets){
+  const v = (timeInput.value||"");
+  if(!v){
+    selectEl.value = "";
+    timeInput.style.display = "none";
+    return;
+  }
+  if(presets.includes(v)){
+    selectEl.value = v;
+    timeInput.style.display = "none";
+  }else{
+    selectEl.value = OTHER_VALUE;
+    timeInput.style.display = "block";
+  }
+}
+
 function build(){
   fillMonthYear();
 
@@ -630,17 +673,43 @@ function build(){
         </select>
       </td>
 
-      <td><input type="time" class="start"></td>
-      <td><input type="time" class="end"></td>
-
+      <!-- BEGINN (Option B) -->
       <td>
+        <div class="timeCell">
+          <select class="startPreset">
+            <option value="" selected disabled>Wählen</option>
+            ${presetOptionsHtml(START_PRESETS)}
+            <option value="${OTHER_VALUE}">Andere…</option>
+          </select>
+          <input type="time" class="start timeOther" style="display:none;">
+        </div>
+      </td>
+
+      <!-- ENDE (Option B) -->
+      <td>
+        <div class="timeCell">
+          <select class="endPreset">
+            <option value="" selected disabled>Wählen</option>
+            ${presetOptionsHtml(END_PRESETS)}
+            <option value="${OTHER_VALUE}">Andere…</option>
+          </select>
+          <input type="time" class="end timeOther" style="display:none;">
+        </div>
+      </td>
+
+      <td class="right">
         <input type="text" class="hours entryHours" placeholder="0" readonly>
       </td>
     `;
 
     const ort = tr.querySelector(".ort");
+
+    const startPreset = tr.querySelector(".startPreset");
     const start = tr.querySelector(".start");
+
+    const endPreset = tr.querySelector(".endPreset");
     const end = tr.querySelector(".end");
+
     const hours = tr.querySelector(".hours");
 
     function activate(){ setActiveRow(tr); }
@@ -656,9 +725,41 @@ function build(){
     ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
     ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
 
-    start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
-    end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
+    /* ===== NEU: Preset Select Events ===== */
+    startPreset.addEventListener("change", ()=>{
+      activate();
+      applyPresetSelect(startPreset, start, START_PRESETS);
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
+    endPreset.addEventListener("change", ()=>{
+      activate();
+      applyPresetSelect(endPreset, end, END_PRESETS);
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
 
+    /* Wenn "Andere…" => Time Input sichtbar => normaler Change */
+    start.addEventListener("change", ()=>{
+      activate();
+      applyFromTimeToSelect(startPreset, start, START_PRESETS);
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
+    end.addEventListener("change", ()=>{
+      activate();
+      applyFromTimeToSelect(endPreset, end, END_PRESETS);
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
+
+    /* Focus highlight */
+    startPreset.addEventListener("focus", activate);
+    endPreset.addEventListener("focus", activate);
     start.addEventListener("focus", activate);
     end.addEventListener("focus", activate);
 
@@ -671,6 +772,18 @@ function build(){
 
   document.querySelectorAll(".ort").forEach(sel=>{
     if(sel.value) applyShortLabel(sel);
+  });
+
+  /* ===== NEU: Nach Load die Presets passend setzen ===== */
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const sp = tr.querySelector(".startPreset");
+    const s  = tr.querySelector(".start");
+    const ep = tr.querySelector(".endPreset");
+    const e  = tr.querySelector(".end");
+
+    // Wenn es gespeicherte Werte gibt: Select automatisch wählen oder "Andere…"
+    if(s && sp) applyFromTimeToSelect(sp, s, START_PRESETS);
+    if(e && ep) applyFromTimeToSelect(ep, e, END_PRESETS);
   });
 
   updateTotal();
@@ -694,14 +807,12 @@ function timeToMinutes(t){
   return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
 
-/* ✅ Stundenfeld: nur Zahl */
 function formatHoursSmart(hours){
   if(hours == null || isNaN(hours)) return "";
   const rounded = Math.round(hours * 100) / 100;
-  return Number.isInteger(rounded) ? rounded.toString() : rounded.toString();
+  if(Number.isInteger(rounded)) return rounded.toString();   // nur Zahl
+  return rounded.toString();                                  // 4.5 statt 4.50
 }
-
-/* ✅ Für Gesamt/Print/Preview weiterhin "Std" */
 function formatHoursSmartWithStd(hours){
   const v = formatHoursSmart(hours);
   return v ? (v + " Std") : "";
@@ -720,8 +831,7 @@ function autoHours(row){
   let diff=e-s;
   if(diff<0) diff+=1440;
   const hours = diff/60;
-
-  out.value = formatHoursSmart(hours); // ✅ NUR ZAHL im Feld
+  out.value = formatHoursSmartWithStd(hours);  // Feld zeigt "4.5 Std"
   updateTotal();
 }
 
@@ -737,7 +847,8 @@ function updateTotal(){
     const v=parseHoursFromField(i.value);
     if(!isNaN(v)) sum+=v;
   });
-  sumEl.textContent = formatHoursSmartWithStd(sum) || "0 Std"; // ✅ Gesamt weiterhin "Std"
+  const txt = formatHoursSmartWithStd(sum) || "0 Std";
+  sumEl.textContent = txt;
 }
 
 function getState(){
@@ -778,6 +889,7 @@ function loadState(){
     const rowEls=document.querySelectorAll("#rows tr");
     (st.rows||[]).forEach((r, idx)=>{
       if(!rowEls[idx]) return;
+
       const ortSel=rowEls[idx].querySelector(".ort");
       if(r.ort) ortSel.value=r.ort; else ortSel.selectedIndex=0;
 
@@ -920,13 +1032,11 @@ async function senden(){
   sendBtn.textContent = "Sende...";
 
   try{
-    const res = await fetch(WEB_APP_URL, {
+    await fetch(WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
-
-    if(!res.ok) throw new Error("HTTP " + res.status);
 
     alert("Gesendet ✅");
   }catch(err){
