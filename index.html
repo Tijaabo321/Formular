@@ -518,14 +518,14 @@ input, select{
    2) APP_PIN      -> PIN
    3) PIN_BG_FILE  -> lokales Bild im Repo, z.B. "test.jpg" oder "images/test.jpg"
    ========================================================= */
-const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";  // z.B. https://script.google.com/macros/s/.../exec
-const APP_PIN     = "1234";                // PIN
-const PIN_BG_FILE = "test.jpg";            // Bild-Dateiname im Repo (keine URL!)
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";  // z.B. https://script.google.com/macros/s/.../exec
+const APP_PIN     = "8558";                // PIN
+const PIN_BG_FILE = "nr3.jpg";            // Bild-Dateiname im Repo (keine URL!)
 
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  { value: "Niendorf Nord",         short: " Nindorf Nord" },
+  { value: "Niendorf Nord",         short: "Nindorf Nord" },
   { value: "Hagenbecks Tierpark",   short: "Hagensbeck Tierpark" },
   { value: "Farmsen",               short: "Farmsen" },
   { value: "Ochsenzoll",            short: "Ochsenzoll" }
@@ -1018,6 +1018,7 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 </script>
 </body>
 </html>
+
 
 
 
