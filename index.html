@@ -187,6 +187,8 @@ input, select{
   font-size:14px;
   background:#fff;
 }
+
+/* ✅ Stundenfeld: zentriert & nur Zahl (kein "Std") */
 .entryHours{
   width:100%;
   padding:9px 10px;
@@ -195,8 +197,9 @@ input, select{
   background:#f8fafc;
   font-weight:900;
   font-size:14px;
-  text-align:center;
+  text-align:center; /* ✅ zentriert */
 }
+
 .right{ text-align:right; }
 
 /* Spaltenbreiten: maximal tight, aber NICHT kollidierend */
@@ -426,7 +429,7 @@ input, select{
             <th class="colKehre">KEHRE</th>
             <th class="colTime">Beginn</th>
             <th class="colTime">Ende</th>
-            <th class="colStd right">Stunden</th>
+            <th class="colStd">Stunden</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -492,9 +495,9 @@ input, select{
    2) APP_PIN      -> PIN
    3) PIN_BG_FILE  -> lokales Bild im Repo, z.B. "test.jpg" oder "images/test.jpg"
    ========================================================= */
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";  // z.B. https://script.google.com/macros/s/.../exec
-const APP_PIN     = "5885";                // PIN
-const PIN_BG_FILE = "nr3.jpg";            // <== HIER: Bild-Dateiname im Repo (keine URL!)
+const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";  // z.B. https://script.google.com/macros/s/.../exec
+const APP_PIN     = "1234";                // PIN
+const PIN_BG_FILE = "test.jpg";            // <== Bild-Dateiname im Repo (keine URL!)
 
 /* ========================================================= */
 
@@ -630,7 +633,7 @@ function build(){
       <td><input type="time" class="start"></td>
       <td><input type="time" class="end"></td>
 
-      <td class="right">
+      <td>
         <input type="text" class="hours entryHours" placeholder="0" readonly>
       </td>
     `;
@@ -691,12 +694,14 @@ function timeToMinutes(t){
   return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
 
+/* ✅ Stundenfeld: nur Zahl */
 function formatHoursSmart(hours){
   if(hours == null || isNaN(hours)) return "";
   const rounded = Math.round(hours * 100) / 100;
-  if(Number.isInteger(rounded)) return rounded.toString();   // nur Zahl
-  return rounded.toString();                                  // 4.5 statt 4.50
+  return Number.isInteger(rounded) ? rounded.toString() : rounded.toString();
 }
+
+/* ✅ Für Gesamt/Print/Preview weiterhin "Std" */
 function formatHoursSmartWithStd(hours){
   const v = formatHoursSmart(hours);
   return v ? (v + " Std") : "";
@@ -715,7 +720,8 @@ function autoHours(row){
   let diff=e-s;
   if(diff<0) diff+=1440;
   const hours = diff/60;
-  out.value = formatHoursSmartWithStd(hours);  // Feld zeigt "4.5 Std"
+
+  out.value = formatHoursSmart(hours); // ✅ NUR ZAHL im Feld
   updateTotal();
 }
 
@@ -731,8 +737,7 @@ function updateTotal(){
     const v=parseHoursFromField(i.value);
     if(!isNaN(v)) sum+=v;
   });
-  const txt = formatHoursSmartWithStd(sum) || "0 Std";
-  sumEl.textContent = txt;
+  sumEl.textContent = formatHoursSmartWithStd(sum) || "0 Std"; // ✅ Gesamt weiterhin "Std"
 }
 
 function getState(){
@@ -921,8 +926,7 @@ async function senden(){
       body: JSON.stringify(payload)
     });
 
-    // optional: etwas strenger, falls du willst:
-    // if(!res.ok) throw new Error("HTTP " + res.status);
+    if(!res.ok) throw new Error("HTTP " + res.status);
 
     alert("Gesendet ✅");
   }catch(err){
@@ -994,4 +998,3 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 </script>
 </body>
 </html>
-
