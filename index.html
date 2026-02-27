@@ -18,15 +18,15 @@
   --accent2:#06b6d4;
   --shadow: 0 12px 28px rgba(0,0,0,.10);
 
-  /* Column header colors */
-  --hTag:   rgba(79,70,229,.18);
-  --hKehre: rgba(6,182,212,.18);
-  --hBeg:   rgba(34,197,94,.18);
-  --hEnd:   rgba(245,158,11,.18);
-  --hStd:   rgba(244,63,94,.16);
-
   /* PIN Background (wird per JS gesetzt) */
   --pinBg: none;
+
+  /* Header-Farben (klar unterscheidbar) */
+  --hDay: rgba(99,102,241,.18);
+  --hKehre: rgba(34,211,238,.18);
+  --hStart: rgba(16,185,129,.18);
+  --hEnd: rgba(251,191,36,.18);
+  --hStd: rgba(244,63,94,.16);
 }
 
 *{ box-sizing:border-box; }
@@ -124,7 +124,7 @@ input, select{
 }
 
 /* =========================
-   HAUPTSEITE: TABELLE (MAXIMAL TIGHT)
+   HAUPTSEITE: TABELLE (EDITIERBAR) - SCROLL
    ========================= */
 .tableCard{
   margin-top:10px;
@@ -141,7 +141,10 @@ input, select{
   gap:10px;
   padding:2px 2px 10px;
 }
-.tableHeadRow .title{ font-weight:1000; font-size:16px; }
+.tableHeadRow .title{
+  font-weight:1000;
+  font-size:16px;
+}
 .tableHeadRow .hint{
   color:var(--muted);
   font-weight:800;
@@ -158,80 +161,72 @@ input, select{
   -webkit-overflow-scrolling:touch;
 }
 
-/* Tabelle: tight + kein Quetschen */
+/* Tabelle selbst */
 .entryTable{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
-  min-width: 600px; /* tight, aber genug damit nichts zerquetscht */
+  min-width: 600px; /* tighter als vorher (720px) */
 }
 .entryTable th{
   font-weight:1000;
   font-size:13px;
-  padding:8px 6px;
+  padding:10px 8px;
   border-bottom:1px solid var(--border);
   letter-spacing:.2px;
 }
 .entryTable td{
-  padding:6px 5px;     /* tighter */
+  padding:10px 8px;
   border-bottom:1px solid var(--border);
   vertical-align:middle;
 }
 
-/* farblich unterscheidbare Header */
-.thTag   { background:linear-gradient(90deg, var(--hTag),   rgba(255,255,255,.40)); }
-.thKehre { background:linear-gradient(90deg, var(--hKehre), rgba(255,255,255,.40)); }
-.thBeg   { background:linear-gradient(90deg, var(--hBeg),   rgba(255,255,255,.40)); }
-.thEnd   { background:linear-gradient(90deg, var(--hEnd),   rgba(255,255,255,.40)); }
-.thStd   { background:linear-gradient(90deg, var(--hStd),   rgba(255,255,255,.40)); }
+/* Header-Farben pro Spalte (klar unterscheidbar) */
+.thDay{   background:linear-gradient(90deg, var(--hDay), rgba(255,255,255,.0)); }
+.thKehre{ background:linear-gradient(90deg, var(--hKehre), rgba(255,255,255,.0)); }
+.thStart{ background:linear-gradient(90deg, var(--hStart), rgba(255,255,255,.0)); }
+.thEnd{   background:linear-gradient(90deg, var(--hEnd), rgba(255,255,255,.0)); }
+.thStd{   background:linear-gradient(90deg, var(--hStd), rgba(255,255,255,.0)); }
 
-.entryTable select,
 .entryTable input[type="time"]{
   width:100%;
-  display:block;     /* <-- FIX: füllt Zelle (kein heller Streifen) */
-  min-width:0;       /* <-- FIX: verhindert komische Breiten */
   padding:9px 10px;
-  border-radius:12px;
+  border-radius:14px;
   border:1px solid var(--border);
   font-size:14px;
   background:#fff;
 }
 
-/* Select “clean” */
+/* KEHRE Select: weniger Padding, ellipsis, kein unnötiger Leerraum */
 .entryTable select{
-  -webkit-appearance:none;
-  appearance:none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, #64748b 50%),
-    linear-gradient(135deg, #64748b 50%, transparent 50%);
-  background-position:
-    calc(100% - 15px) 50%,
-    calc(100% - 10px) 50%;
-  background-size:5px 5px, 5px 5px;
-  background-repeat:no-repeat;
-  padding-right:26px;
+  width:100%;
+  padding:9px 28px 9px 10px; /* rechts nur Platz für Pfeil */
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-size:14px;
+  background:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-/* Stunden: nur Zahl im Feld (Std nur im Header) */
 .entryHours{
   width:100%;
-  display:block;
-  min-width:0;
   padding:9px 10px;
-  border-radius:12px;
+  border-radius:14px;
   border:1px solid var(--border);
   background:#f8fafc;
-  font-weight:1000;
+  font-weight:900;
   font-size:14px;
   text-align:right;
 }
 .right{ text-align:right; }
 
-/* Spaltenbreiten (maximal tight, ohne Quetschen) */
-.colDay  { width:70px; }
-.colKehre{ width:170px; } /* reicht für "H. Tierpark" */
-.colTime { width:110px; } /* Zeiten kompakt aber lesbar */
-.colStd  { width:90px;  } /* Zahl passt, keine „Std“ im Feld */
+/* Spaltenbreiten: maximal tight (ohne Text zu quetschen) */
+.colDay{ width:66px; }
+.colKehre{ width:150px; } /* reicht für "H. Tierpark" */
+.colTime{ width:120px; }  /* verhindert Quetsch bei Zeiten */
+.colStd{ width:100px; }
 
 /* Active row highlight */
 .trActive td{
@@ -339,6 +334,7 @@ input, select{
   justify-content:center;
   padding:16px;
 
+  /* Bild + Night Overlay */
   background:
     radial-gradient(1200px 600px at 30% 20%, rgba(79,70,229,.28), transparent 55%),
     radial-gradient(1000px 600px at 70% 80%, rgba(6,182,212,.22), transparent 55%),
@@ -352,6 +348,8 @@ input, select{
   width:min(420px, 100%);
   border-radius:22px;
   padding:18px;
+
+  /* Glass */
   background: rgba(255,255,255,0.10);
   border:1px solid rgba(255,255,255,0.18);
   box-shadow: 0 24px 60px rgba(0,0,0,.45);
@@ -438,7 +436,7 @@ input, select{
     <div class="cardDivider"></div>
   </div>
 
-  <!-- Tabelle (maximal tight) -->
+  <!-- Tabelle -->
   <div class="tableCard">
     <div class="tableHeadRow">
       <div class="title">Eintragen</div>
@@ -449,9 +447,9 @@ input, select{
       <table class="entryTable">
         <thead>
           <tr>
-            <th class="colDay thTag">Tag</th>
+            <th class="colDay thDay">Tag</th>
             <th class="colKehre thKehre">KEHRE</th>
-            <th class="colTime thBeg">Beginn</th>
+            <th class="colTime thStart">Beginn</th>
             <th class="colTime thEnd">Ende</th>
             <th class="colStd thStd right">Std</th>
           </tr>
@@ -495,7 +493,7 @@ input, select{
           <th style="width:44%;">Einsatzort</th>
           <th style="width:16%;">Beginn</th>
           <th style="width:16%;">Ende</th>
-          <th class="right" style="width:16%;">Std</th>
+          <th class="right" style="width:16%;">Stunden</th>
         </tr>
       </thead>
       <tbody id="printBody"></tbody>
@@ -522,15 +520,15 @@ input, select{
 const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";
 const APP_PIN     = "1234";
 
-/* Bild:
-   - GitHub Pages: am besten lokal im Repo, z.B. "images/hochbahn.jpg"
-   - oder volle URL
+/* Bild-Platzhalter:
+   - Wenn du es später in GitHub hochlädst, nimm z.B. "images/hochbahn.jpg"
+   - Oder eine volle URL (https://...)
 */
 const PIN_BG_URL  = "HIER_DEIN_BILD_URL";
 
 /* ====== Rest ====== */
 
-/* ORTE: Dropdown zeigt FULL, Feld danach SHORT */
+/* ORTE (Wert bleibt lang; Anzeige in der Zeile wird kurz via "Short Label") */
 const ORTE = [
   { value: "Niendorf Nord",         short: "Niendorf" },
   { value: "Hagenbecks Tierpark",   short: "H. Tierpark" },
@@ -616,18 +614,24 @@ function fillMonthYear(){
 }
 
 function buildOrtOptions(){
-  // Option-Text bleibt FULL, Short steht im data-short
   return ORTE.map(o => `<option value="${o.value}" data-short="${o.short}">${o.value}</option>`).join("");
 }
 
-/* Feld nach Auswahl SHORT, Dropdown beim Öffnen FULL */
+/* Trick:
+   - Beim Öffnen (focus/mousedown) zeigen wir FULL
+   - Nach Auswahl/blur zeigen wir SHORT im Feld
+*/
 function applyShortLabel(selectEl){
   const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
   if(!opt) return;
   const short = opt.getAttribute("data-short");
   const full = opt.getAttribute("data-full") || opt.textContent;
+
   opt.setAttribute("data-full", full);
-  if(short) opt.textContent = short;
+
+  if(short){
+    opt.textContent = short;
+  }
 }
 function restoreFullLabel(selectEl){
   const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
@@ -725,23 +729,11 @@ function timeToMinutes(t){
   return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
 
-function round2(n){
-  return Math.round(n*100)/100;
-}
-
-/* Zellen: nur Zahl (Std nur im Header) */
-function formatHoursCell(hours){
+function formatHoursSmart(hours){
   if(hours == null || isNaN(hours)) return "";
-  const v = round2(hours);
-  // ohne unnötige Nullen
-  return Number.isInteger(v) ? String(v) : String(v);
-}
-
-/* Gesamt: mit "Std" */
-function formatHoursTotal(hours){
-  if(hours == null || isNaN(hours)) return "";
-  const v = round2(hours);
-  return (Number.isInteger(v) ? String(v) : String(v)) + " Std";
+  const rounded = Math.round(hours * 100) / 100;
+  if(Number.isInteger(rounded)) return rounded + " Std";
+  return rounded.toString() + " Std";
 }
 
 function autoHours(row){
@@ -757,12 +749,12 @@ function autoHours(row){
   let diff=e-s;
   if(diff<0) diff+=1440;
   const hours = diff/60;
-  out.value = formatHoursCell(hours);
+  out.value = (formatHoursSmart(hours) || "").replace(" Std",""); /* in Feld nur Zahl, Header hat Std */
   updateTotal();
 }
 
 function parseHoursFromField(v){
-  if(v===null || v===undefined) return NaN;
+  if(!v) return NaN;
   const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
   return m ? parseFloat(m[1]) : NaN;
 }
@@ -773,7 +765,7 @@ function updateTotal(){
     const v=parseHoursFromField(i.value);
     if(!isNaN(v)) sum+=v;
   });
-  sumEl.textContent = formatHoursTotal(sum) || "0 Std";
+  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
 }
 
 function getState(){
@@ -859,13 +851,13 @@ function buildPrintTable(){
       <td>${ort}</td>
       <td>${start}</td>
       <td>${end}</td>
-      <td class="right">${hrsTxt}</td>
+      <td class="right">${hrsTxt ? (hrsTxt + " Std") : ""}</td>
     `;
     printBodyEl.appendChild(tr);
   });
 
-  printTotalEl.textContent = String(round2(sum));
-  printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursTotal(sum)}`;
+  printTotalEl.textContent = formatHoursSmart(sum);
+  printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
 }
 
 function exportPDF(){
@@ -926,19 +918,19 @@ function openPreview(){
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
-        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs}</td>
+        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs ? (hrs + " Std") : ""}</td>
       </tr>
     `);
   });
 
   parts.push(`</tbody></table>`);
   previewTable.innerHTML=parts.join("");
-  previewTotal.textContent = `Gesamtstunden: ${formatHoursTotal(sum)}`;
+  previewTotal.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
   modalBack.style.display="block";
 }
 function closePreview(){ modalBack.style.display="none"; }
 
-/* ===== Senden + Hinweis ===== */
+/* ===== Senden ===== */
 async function senden(){
   if(!confirm("Hinweis: Bitte sende nur EINMAL im Monat deine Stunden (nicht täglich). Jetzt senden?")){
     return;
@@ -1018,6 +1010,7 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 
 /*** START ***/
 (function init(){
+  /* PIN background setzen (Platzhalter) */
   if(PIN_BG_URL && !PIN_BG_URL.includes("HIER_DEIN_BILD_URL")){
     document.documentElement.style.setProperty("--pinBg", `url("${PIN_BG_URL}")`);
   }else{
