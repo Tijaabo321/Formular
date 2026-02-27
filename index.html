@@ -451,7 +451,7 @@ input, select{
             <th class="colKehre thKehre">KEHRE</th>
             <th class="colTime thStart">Beginn</th>
             <th class="colTime thEnd">Ende</th>
-            <th class="colStd thStd right">Stunden</th>
+            <th class="colStd thStd right">Std</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -517,14 +517,14 @@ input, select{
    2) deinen PIN (zum Öffnen)
    3) dein Background Bild (URL) für PIN Screen
    ========================================================= */
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
+const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";
 const APP_PIN     = "8558";
 
 /* Bild-Platzhalter:
    - Wenn du es später in GitHub hochlädst, nimm z.B. "images/hochbahn.jpg"
    - Oder eine volle URL (https://...)
 */
-const PIN_BG_URL  = "nr3.jpg";
+const PIN_BG_URL  = "HIER_DEIN_BILD_URL";
 
 /* ====== Rest ====== */
 
@@ -936,7 +936,7 @@ async function senden(){
     return;
   }
 
-  if(!WEB_APP_URL || WEB_APP_URL.includes("HIER_DEIN_EXEC_LINK")){
+  if(!WEB_APP_URL || WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec")){
     alert("Bitte erst den WEB_APP_URL (exec Link) im Code eintragen.");
     return;
   }
@@ -1011,7 +1011,7 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 /*** START ***/
 (function init(){
   /* PIN background setzen (Platzhalter) */
-  if(PIN_BG_URL && !PIN_BG_URL.includes("HIER_DEIN_BILD_URL")){
+  if(PIN_BG_URL && !PIN_BG_URL.includes("nr3.jpg")){
     document.documentElement.style.setProperty("--pinBg", `url("${PIN_BG_URL}")`);
   }else{
     document.documentElement.style.setProperty("--pinBg", "none");
@@ -1024,5 +1024,3 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 </script>
 </body>
 </html>
-
-
