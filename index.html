@@ -117,7 +117,7 @@ input, select{
 }
 
 /* =========================
-   HAUPTSEITE: TABELLE (EDITIERBAR) - SCROLL (B)
+   HAUPTSEITE: TABELLE (EDITIERBAR)
    ========================= */
 .tableCard{
   margin-top:10px;
@@ -154,51 +154,57 @@ input, select{
   -webkit-overflow-scrolling:touch;
 }
 
-/* Tabelle selbst: min-width erzwingt horizontal scroll */
+/* Tabelle selbst */
 .entryTable{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
-  min-width: 720px; /* wichtig: damit nix gequetscht wird */
+  min-width: 560px; /* ↓ noch kleiner (weil Stunden schmaler) */
 }
+
 .entryTable th{
   background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
   font-weight:1000;
   font-size:13px;
-  padding:10px 8px;
+  padding:9px 6px;
   border-bottom:1px solid var(--border);
+  white-space:nowrap;
 }
 .entryTable td{
-  padding:10px 8px;
+  padding:8px 6px;
   border-bottom:1px solid var(--border);
   vertical-align:middle;
 }
+
 .entryTable select,
 .entryTable input[type="time"]{
   width:100%;
-  padding:10px 12px;
-  border-radius:14px;
+  padding:9px 10px;
+  border-radius:12px;
   border:1px solid var(--border);
   font-size:14px;
   background:#fff;
 }
+
+/* Stunden: nur Zahl, deshalb extra kompakt */
 .entryHours{
   width:100%;
-  padding:10px 12px;
-  border-radius:14px;
+  padding:9px 10px;
+  border-radius:12px;
   border:1px solid var(--border);
   background:#f8fafc;
-  font-weight:900;
+  font-weight:1000;
   font-size:14px;
   text-align:right;
+  white-space:nowrap;
 }
 .right{ text-align:right; }
 
-/* Spaltenbreiten: KEHRE nicht unnötig breit, Zeiten nicht gequetscht */
-.colDay{ width:76px; }
-.colKehre{ width:210px; } /* genug für "H. Tierpark" + Pfeil */
-.colTime{ width:140px; }  /* verhindert "Beginn/Ende" Quetsch */
-.colStd{ width:140px; }
+/* Spaltenbreiten: jetzt deutlich kompakter */
+.colDay{ width:72px; }
+.colKehre{ width:160px; }   /* reicht für H. Tierpark */
+.colTime{ width:108px; }    /* Beginn/Ende kompakt */
+.colStd{ width:88px; }      /* Stunden sehr schmal */
 
 /* Active row highlight */
 .trActive td{
@@ -209,7 +215,7 @@ input, select{
 }
 
 /* =========================
-   PRINT: 1 Seite (GARANTIERT)
+   PRINT: 1 Seite
    ========================= */
 @page{ size:A4 landscape; margin:3mm; }
 #printArea{ display:none; }
@@ -306,7 +312,6 @@ input, select{
   justify-content:center;
   padding:16px;
 
-  /* Bild + Night Overlay */
   background:
     radial-gradient(1200px 600px at 30% 20%, rgba(79,70,229,.28), transparent 55%),
     radial-gradient(1000px 600px at 70% 80%, rgba(6,182,212,.22), transparent 55%),
@@ -321,7 +326,6 @@ input, select{
   border-radius:22px;
   padding:18px;
 
-  /* Glass */
   background: rgba(255,255,255,0.10);
   border:1px solid rgba(255,255,255,0.18);
   box-shadow: 0 24px 60px rgba(0,0,0,.45);
@@ -408,7 +412,7 @@ input, select{
     <div class="cardDivider"></div>
   </div>
 
-  <!-- Tabelle (Variante B: horizontal scroll) -->
+  <!-- Tabelle -->
   <div class="tableCard">
     <div class="tableHeadRow">
       <div class="title">Eintragen</div>
@@ -492,15 +496,9 @@ input, select{
 const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";
 const APP_PIN     = "1234";
 
-/* Bild-Platzhalter:
-   - Wenn du es später in GitHub hochlädst, nimm z.B. "images/hochbahn.jpg"
-   - Oder eine volle URL (https://...)
-*/
-const PIN_BG_URL  = "nr3.jpg";
+const PIN_BG_URL  = "HIER_DEIN_BILD_URL";
 
-/* ====== Rest ====== */
-
-/* ORTE (Wert bleibt lang; Anzeige in der Zeile wird kurz via "Short Label") */
+/* ORTE */
 const ORTE = [
   { value: "Niendorf Nord",         short: "Niendorf" },
   { value: "Hagenbecks Tierpark",   short: "H. Tierpark" },
@@ -561,7 +559,6 @@ function setActiveRow(tr){
   if(tr) tr.classList.add("trActive");
 }
 
-/* Jahr intern 2026, Anzeige 26 */
 function fillMonthYear(){
   monthEl.innerHTML="";
   yearEl.innerHTML="";
@@ -589,22 +586,13 @@ function buildOrtOptions(){
   return ORTE.map(o => `<option value="${o.value}" data-short="${o.short}">${o.value}</option>`).join("");
 }
 
-/* Trick:
-   - Beim Öffnen (focus/mousedown) zeigen wir FULL
-   - Nach Auswahl/blur zeigen wir SHORT im Feld
-*/
 function applyShortLabel(selectEl){
   const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
   if(!opt) return;
   const short = opt.getAttribute("data-short");
   const full = opt.getAttribute("data-full") || opt.textContent;
-
-  // sicherheitshalber speichern
   opt.setAttribute("data-full", full);
-
-  if(short){
-    opt.textContent = short; // nur die gewählte Option wird kurz angezeigt
-  }
+  if(short) opt.textContent = short;
 }
 function restoreFullLabel(selectEl){
   const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
@@ -642,7 +630,7 @@ function build(){
       <td><input type="time" class="end"></td>
 
       <td class="right">
-        <input type="text" class="hours entryHours" placeholder="0 Std" readonly>
+        <input type="text" class="hours entryHours" placeholder="0" readonly>
       </td>
     `;
 
@@ -655,17 +643,13 @@ function build(){
 
     ort.addEventListener("change", ()=>{
       activate();
-      // nach Auswahl => kurz anzeigen
       applyShortLabel(ort);
       markDirty();
       saveState();
     });
 
-    // wenn der User wieder öffnet => full anzeigen
     ort.addEventListener("focus", ()=>{ activate(); restoreFullLabel(ort); });
     ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
-
-    // nach dem Schließen => kurz anzeigen
     ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
 
     start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
@@ -681,7 +665,6 @@ function build(){
 
   loadState();
 
-  // nach loadState => ggf. short labels anwenden
   document.querySelectorAll(".ort").forEach(sel=>{
     if(sel.value) applyShortLabel(sel);
   });
@@ -707,6 +690,14 @@ function timeToMinutes(t){
   return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
 
+/* Nur Zahl für Zeile, keine "Std" */
+function formatHoursNumber(hours){
+  if(hours == null || isNaN(hours)) return "";
+  const rounded = Math.round(hours * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+}
+
+/* Für Gesamt weiterhin mit "Std" */
 function formatHoursSmart(hours){
   if(hours == null || isNaN(hours)) return "";
   const rounded = Math.round(hours * 100) / 100;
@@ -727,12 +718,13 @@ function autoHours(row){
   let diff=e-s;
   if(diff<0) diff+=1440;
   const hours = diff/60;
-  out.value = formatHoursSmart(hours);
+
+  out.value = formatHoursNumber(hours); /* ← nur Zahl */
   updateTotal();
 }
 
 function parseHoursFromField(v){
-  if(!v) return NaN;
+  if(!v && v!==0) return NaN;
   const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
   return m ? parseFloat(m[1]) : NaN;
 }
@@ -834,7 +826,7 @@ function buildPrintTable(){
     printBodyEl.appendChild(tr);
   });
 
-  printTotalEl.textContent = formatHoursSmart(sum);
+  printTotalEl.textContent = formatHoursNumber(sum); /* Zahl im Feld */
   printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
 }
 
@@ -855,7 +847,7 @@ function allesLoeschen(){
   build();
 }
 
-/*** Vorschau (wie vorher) ***/
+/*** Vorschau ***/
 function openPreview(){
   const name=(nameEl.value||"").trim();
   const mm=pad2(current.getMonth()+1);
@@ -988,11 +980,9 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 
 /*** START ***/
 (function init(){
-  /* PIN background setzen (Platzhalter) */
   if(PIN_BG_URL && !PIN_BG_URL.includes("HIER_DEIN_BILD_URL")){
     document.documentElement.style.setProperty("--pinBg", `url("${PIN_BG_URL}")`);
   }else{
-    /* Fallback: wenn kein Bild eingetragen, trotzdem Night Mood */
     document.documentElement.style.setProperty("--pinBg", "none");
   }
 
@@ -1003,13 +993,3 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
