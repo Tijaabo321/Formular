@@ -623,7 +623,7 @@ function fillMonthYear(){
   for(let i=nowY-3;i<=nowY+6;i++){
     const o=document.createElement("option");
     o.value=String(i);
-    o.textContent=String(i).slice(-2);
+    o.textContent=String(i).slice(i);
     yearEl.appendChild(o);
   }
 
@@ -1057,3 +1057,4 @@ nameEl.addEventListener("input", ()=>{
 </script>
 </body>
 </html>
+
