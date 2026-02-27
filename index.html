@@ -13,10 +13,15 @@
   --muted:#64748b;
   --border:#e2e8f0;
   --danger:#ef4444;
+
   --accent:#4f46e5;
   --accent2:#06b6d4;
   --shadow: 0 12px 28px rgba(0,0,0,.10);
+
+  /* PIN Background (wird per JS gesetzt) */
+  --pinBg: none;
 }
+
 *{ box-sizing:border-box; }
 body{
   margin:0;
@@ -112,107 +117,95 @@ input, select{
 }
 
 /* =========================
-   HAUPTSEITE: TABELLE (EDITIERBAR)
+   HAUPTSEITE: TABELLE (EDITIERBAR) - SCROLL (B)
    ========================= */
-.tableWrap{
+.tableCard{
   margin-top:10px;
-  background:#fff;
+  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
   border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
-  overflow:hidden;
+  padding:12px;
   box-shadow:0 6px 16px rgba(0,0,0,.05);
 }
-
-/* Header über der scrollbaren Tabelle */
-.tableHead{
+.tableHeadRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  padding:10px 12px;
-  background:linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
-  border-bottom:1px solid rgba(226,232,240,.95);
+  padding:2px 2px 10px;
 }
-.tableHead b{ font-size:16px; }
-.tableHead span{ color:var(--muted); font-weight:800; font-size:13px; }
+.tableHeadRow .title{
+  font-weight:1000;
+  font-size:16px;
+}
+.tableHeadRow .hint{
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+  white-space:nowrap;
+}
 
-/* Horizontal scroll */
+/* Scroll wrapper */
 .tableScroll{
-  overflow-x:auto;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:auto;
   -webkit-overflow-scrolling:touch;
 }
 
-/* ===== WICHTIG: min-width reduziert -> weniger unnötige breite ===== */
+/* Tabelle selbst: min-width erzwingt horizontal scroll */
 .entryTable{
   width:100%;
-  min-width:520px;              /* <<< war größer, jetzt kompakter */
-  border-collapse:separate;
-  border-spacing:0;
+  border-collapse:collapse;
   table-layout:fixed;
+  min-width: 720px; /* wichtig: damit nix gequetscht wird */
 }
-
 .entryTable th{
   background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
   font-weight:1000;
   font-size:13px;
-  padding:8px 6px;
-  border-bottom:1px solid rgba(226,232,240,.95);
+  padding:10px 8px;
+  border-bottom:1px solid var(--border);
 }
 .entryTable td{
-  padding:8px 6px;
-  border-bottom:1px solid rgba(226,232,240,.95);
+  padding:10px 8px;
+  border-bottom:1px solid var(--border);
   vertical-align:middle;
 }
-
-/* Inputs in Tabelle kompakter (weniger "pill") */
 .entryTable select,
 .entryTable input[type="time"]{
   width:100%;
-  padding:9px 10px;            /* <<< kleiner */
-  border-radius:16px;          /* <<< statt 999px */
-  border:1px solid rgba(226,232,240,.95);
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--border);
   font-size:14px;
   background:#fff;
 }
 .entryHours{
   width:100%;
-  padding:9px 10px;            /* <<< kleiner */
-  border-radius:16px;          /* <<< statt 999px */
-  border:1px solid rgba(226,232,240,.95);
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--border);
   background:#f8fafc;
-  font-weight:1000;
+  font-weight:900;
   font-size:14px;
   text-align:right;
 }
-
 .right{ text-align:right; }
 
-/* ===== Spaltenbreiten (FIX) ===== */
-.colDay{ width:68px; }       /* dd.mm */
-.colOrt{ width:170px; }      /* Kehre kompakter */
-.colTime{ width:112px; }     /* Beginn/Ende größer -> nicht gequetscht */
-.colStd{ width:98px; }       /* Stunden etwas kleiner */
+/* Spaltenbreiten: KEHRE nicht unnötig breit, Zeiten nicht gequetscht */
+.colDay{ width:76px; }
+.colKehre{ width:210px; } /* genug für "H. Tierpark" + Pfeil */
+.colTime{ width:140px; }  /* verhindert "Beginn/Ende" Quetsch */
+.colStd{ width:140px; }
 
 /* Active row highlight */
 .trActive td{
-  background: linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  background: linear-gradient(90deg, rgba(79,70,229,.08), rgba(6,182,212,.06));
 }
 .trActive td:first-child{
   box-shadow: inset 4px 0 0 rgba(79,70,229,.65);
-}
-
-/* Handy */
-@media (max-width: 420px){
-  .entryTable{ min-width:500px; }   /* <<< kompakter */
-  .entryTable th{ font-size:12.5px; padding:8px 5px; }
-  .entryTable td{ padding:8px 5px; }
-  .entryTable select,
-  .entryTable input[type="time"],
-  .entryHours{ font-size:13.5px; padding:8px 9px; border-radius:14px; }
-
-  .colOrt{ width:160px; }
-  .colTime{ width:108px; }
-  .colStd{ width:96px; }
 }
 
 /* =========================
@@ -223,7 +216,7 @@ input, select{
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, .tableWrap, .modalBack, .pinBack{ display:none !important; }
+  .topbar, .card, .total, .tableCard, .modalBack, .pinBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
@@ -301,33 +294,78 @@ input, select{
   border-top:1px solid var(--border);
 }
 
-/* PIN Overlay */
+/* =========================
+   PIN OVERLAY (Banking / Night Mood)
+   ========================= */
 .pinBack{
   position:fixed;
   inset:0;
-  background:rgba(15,23,42,.55);
   z-index:999;
   display:none;
   align-items:center;
   justify-content:center;
-  padding:14px;
+  padding:16px;
+
+  /* Bild + Night Overlay */
+  background:
+    radial-gradient(1200px 600px at 30% 20%, rgba(79,70,229,.28), transparent 55%),
+    radial-gradient(1000px 600px at 70% 80%, rgba(6,182,212,.22), transparent 55%),
+    linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.78)),
+    var(--pinBg);
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
 }
 .pinCard{
   width:min(420px, 100%);
-  background:#fff;
-  border-radius:18px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  padding:14px;
+  border-radius:22px;
+  padding:18px;
+
+  /* Glass */
+  background: rgba(255,255,255,0.10);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color:#fff;
 }
-.pinTitle{ font-weight:1000; font-size:18px; margin:0 0 8px; }
-.pinHint{ color:var(--muted); font-size:13px; margin:0 0 10px; }
-.pinRow{ display:flex; gap:8px; }
-.pinRow input{ flex:1; }
+.pinTitle{ font-weight:1000; font-size:20px; margin:0 0 6px; }
+.pinHint{ color:rgba(255,255,255,.82); font-size:13px; margin:0 0 14px; line-height:1.25; }
+
+.pinRow{ display:flex; gap:10px; align-items:center; }
+.pinRow input{
+  flex:1;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.16);
+  background: rgba(15,23,42,.35);
+  color:#fff;
+  font-size:16px;
+  outline:none;
+}
+.pinRow input::placeholder{ color: rgba(255,255,255,.55); }
+
+.pinOk{
+  width:auto;
+  padding:12px 16px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.16);
+  background: linear-gradient(135deg, rgba(79,70,229,.92), rgba(6,182,212,.88));
+  color:#fff;
+  font-weight:1000;
+  cursor:pointer;
+}
+.pinError{
+  margin-top:10px;
+  font-weight:900;
+  color:#fecaca;
+  display:none;
+}
 </style>
 </head>
 
 <body>
+
 <!-- PIN Overlay -->
 <div class="pinBack" id="pinBack">
   <div class="pinCard">
@@ -335,11 +373,9 @@ input, select{
     <p class="pinHint">Bitte PIN eingeben, um das Stundenformular zu öffnen.</p>
     <div class="pinRow">
       <input id="pinInput" inputmode="numeric" autocomplete="one-time-code" placeholder="PIN eingeben">
-      <button class="primary" id="pinBtn" type="button" style="width:auto; padding:12px 14px;">OK</button>
+      <button class="pinOk" id="pinBtn" type="button">OK</button>
     </div>
-    <div class="small" id="pinError" style="color:var(--danger); display:none; font-weight:900; margin-top:8px;">
-      Falscher PIN
-    </div>
+    <div class="pinError" id="pinError">Falscher PIN</div>
   </div>
 </div>
 
@@ -372,11 +408,11 @@ input, select{
     <div class="cardDivider"></div>
   </div>
 
-  <!-- HAUPTSEITE: EDITIER-TABELLE (SCROLLBAR) -->
-  <div class="tableWrap">
-    <div class="tableHead">
-      <b>Eintragen</b>
-      <span>↔ nach rechts wischen</span>
+  <!-- Tabelle (Variante B: horizontal scroll) -->
+  <div class="tableCard">
+    <div class="tableHeadRow">
+      <div class="title">Eintragen</div>
+      <div class="hint">↔ nach rechts wischen</div>
     </div>
 
     <div class="tableScroll">
@@ -384,7 +420,7 @@ input, select{
         <thead>
           <tr>
             <th class="colDay">Tag</th>
-            <th class="colOrt">Kehre</th>
+            <th class="colKehre">KEHRE</th>
             <th class="colTime">Beginn</th>
             <th class="colTime">Ende</th>
             <th class="colStd right">Stunden</th>
@@ -451,12 +487,27 @@ input, select{
    HIER EINTRAGEN:
    1) deinen Apps Script WebApp EXEC Link (muss mit /exec enden)
    2) deinen PIN (zum Öffnen)
+   3) dein Background Bild (URL) für PIN Screen
    ========================================================= */
-const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";  // <<< HIER EINTRAGEN
-const APP_PIN     = "1234";                // <<< HIER EINTRAGEN
+const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";
+const APP_PIN     = "1234";
 
-/* ====== Rest wie gehabt ====== */
-const ORTE = ["Niendorf Nord","Hagenbecks Tierpark","Farmsen","Ochsenzoll"];
+/* Bild-Platzhalter:
+   - Wenn du es später in GitHub hochlädst, nimm z.B. "images/hochbahn.jpg"
+   - Oder eine volle URL (https://...)
+*/
+const PIN_BG_URL  = "HIER_DEIN_BILD_URL";
+
+/* ====== Rest ====== */
+
+/* ORTE (Wert bleibt lang; Anzeige in der Zeile wird kurz via "Short Label") */
+const ORTE = [
+  { value: "Niendorf Nord",         short: "Niendorf" },
+  { value: "Hagenbecks Tierpark",   short: "H. Tierpark" },
+  { value: "Farmsen",               short: "Farmsen" },
+  { value: "Ochsenzoll",            short: "Ochsenzoll" }
+];
+
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const nameEl = document.getElementById("name");
@@ -510,7 +561,7 @@ function setActiveRow(tr){
   if(tr) tr.classList.add("trActive");
 }
 
-/* Jahr im Dropdown 2-stellig anzeigen */
+/* Jahr intern 2026, Anzeige 26 */
 function fillMonthYear(){
   monthEl.innerHTML="";
   yearEl.innerHTML="";
@@ -525,13 +576,41 @@ function fillMonthYear(){
   const nowY=new Date().getFullYear();
   for(let i=nowY-3;i<=nowY+6;i++){
     const o=document.createElement("option");
-    o.value=String(i);                 // intern bleibt 2026
-    o.textContent=String(i).slice(-2);  // angezeigt wird 26
+    o.value=String(i);
+    o.textContent=String(i).slice(-2);
     yearEl.appendChild(o);
   }
 
   monthEl.value=String(current.getMonth()+1);
   yearEl.value=String(current.getFullYear());
+}
+
+function buildOrtOptions(){
+  return ORTE.map(o => `<option value="${o.value}" data-short="${o.short}">${o.value}</option>`).join("");
+}
+
+/* Trick:
+   - Beim Öffnen (focus/mousedown) zeigen wir FULL
+   - Nach Auswahl/blur zeigen wir SHORT im Feld
+*/
+function applyShortLabel(selectEl){
+  const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
+  if(!opt) return;
+  const short = opt.getAttribute("data-short");
+  const full = opt.getAttribute("data-full") || opt.textContent;
+
+  // sicherheitshalber speichern
+  opt.setAttribute("data-full", full);
+
+  if(short){
+    opt.textContent = short; // nur die gewählte Option wird kurz angezeigt
+  }
+}
+function restoreFullLabel(selectEl){
+  const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
+  if(!opt) return;
+  const full = opt.getAttribute("data-full");
+  if(full) opt.textContent = full;
 }
 
 function build(){
@@ -547,7 +626,7 @@ function build(){
     const tr = document.createElement("tr");
     tr.dataset.day = String(d);
 
-    const shortDate = `${pad2(d)}.${pad2(m)}`; // dd.mm
+    const shortDate = `${pad2(d)}.${pad2(m)}`;
 
     tr.innerHTML = `
       <td><b>${shortDate}</b></td>
@@ -555,7 +634,7 @@ function build(){
       <td>
         <select class="ort">
           <option value="" selected disabled>Wählen</option>
-          ${ORTE.map(o=>`<option value="${o}">${o}</option>`).join("")}
+          ${buildOrtOptions()}
         </select>
       </td>
 
@@ -574,13 +653,26 @@ function build(){
 
     function activate(){ setActiveRow(tr); }
 
-    ort.addEventListener("change", ()=>{ activate(); markDirty(); saveState(); });
+    ort.addEventListener("change", ()=>{
+      activate();
+      // nach Auswahl => kurz anzeigen
+      applyShortLabel(ort);
+      markDirty();
+      saveState();
+    });
+
+    // wenn der User wieder öffnet => full anzeigen
+    ort.addEventListener("focus", ()=>{ activate(); restoreFullLabel(ort); });
+    ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
+
+    // nach dem Schließen => kurz anzeigen
+    ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
+
     start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
     end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
 
     start.addEventListener("focus", activate);
     end.addEventListener("focus", activate);
-    ort.addEventListener("focus", activate);
 
     hours.addEventListener("focus",(e)=>e.target.blur());
 
@@ -588,6 +680,12 @@ function build(){
   }
 
   loadState();
+
+  // nach loadState => ggf. short labels anwenden
+  document.querySelectorAll(".ort").forEach(sel=>{
+    if(sel.value) applyShortLabel(sel);
+  });
+
   updateTotal();
 
   if(exported && !dirty) pdfBtn.disabled=true;
@@ -852,7 +950,7 @@ function requirePin(){
   if(ok) return;
 
   pinBack.style.display="flex";
-  pinInput.focus();
+  setTimeout(()=>pinInput.focus(), 50);
 
   function check(){
     const val=(pinInput.value||"").trim();
@@ -889,9 +987,19 @@ yearEl.addEventListener("change", applyMonthAuto);
 nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 
 /*** START ***/
-fillMonthYear();
-build();
-requirePin();
+(function init(){
+  /* PIN background setzen (Platzhalter) */
+  if(PIN_BG_URL && !PIN_BG_URL.includes("HIER_DEIN_BILD_URL")){
+    document.documentElement.style.setProperty("--pinBg", `url("${PIN_BG_URL}")`);
+  }else{
+    /* Fallback: wenn kein Bild eingetragen, trotzdem Night Mood */
+    document.documentElement.style.setProperty("--pinBg", "none");
+  }
+
+  fillMonthYear();
+  build();
+  requirePin();
+})();
 </script>
 </body>
 </html>
