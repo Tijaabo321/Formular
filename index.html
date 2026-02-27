@@ -7,29 +7,27 @@
 
 <style>
 :root{
-  --bg1:#eef2ff;
-  --bg2:#f6f8ff;
-
+  --bg:#f4f6ff;
   --card:#ffffff;
   --text:#0f172a;
   --muted:#64748b;
-
-  --border:rgba(226,232,240,.95);
+  --border:#e2e8f0;
+  --danger:#ef4444;
 
   --accent:#4f46e5;
   --accent2:#06b6d4;
 
-  --danger:#ef4444;
-
   --shadow: 0 14px 34px rgba(0,0,0,.10);
   --shadow2: 0 8px 18px rgba(0,0,0,.06);
 }
+
 *{ box-sizing:border-box; }
+html,body{ height:100%; }
 
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  background:linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 55%);
+  background:linear-gradient(180deg, #eef2ff 0%, var(--bg) 40%);
   color:var(--text);
 }
 
@@ -40,12 +38,12 @@ body{
   position:sticky;
   top:10px;
   z-index:60;
-  background:linear-gradient(135deg, rgba(79,70,229,.14), rgba(6,182,212,.10));
-  border:1px solid rgba(226,232,240,.9);
+  background:linear-gradient(135deg, rgba(79,70,229,.14), rgba(6,182,212,.12));
+  border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   padding:10px;
   box-shadow:var(--shadow);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(7px);
 }
 
 .btnrow{
@@ -63,7 +61,7 @@ button{
   font-size:15px;
   cursor:pointer;
   background:#fff;
-  transition: transform .08s ease, box-shadow .12s ease, opacity .12s ease;
+  transition: transform .06s ease, filter .12s ease;
 }
 button:active{ transform: scale(.99); }
 button:disabled{ opacity:.55; cursor:not-allowed; }
@@ -74,10 +72,9 @@ button.primary{
   border-color:#111827;
 }
 button.send{
-  background:linear-gradient(135deg, rgba(79,70,229,.96), rgba(6,182,212,.92));
+  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.92));
   color:#fff;
   border-color:rgba(79,70,229,.35);
-  box-shadow: 0 8px 18px rgba(79,70,229,.18);
 }
 button.danger{
   color:var(--danger);
@@ -90,22 +87,21 @@ button.danger{
 /* Card */
 .card{
   margin-top:10px;
-  background:linear-gradient(135deg, rgba(79,70,229,.16), rgba(6,182,212,.10));
-  border:1px solid rgba(226,232,240,.95);
+  background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.12));
+  border:1px solid rgba(226,232,240,.96);
   border-radius:18px;
   padding:14px;
   box-shadow:var(--shadow2);
 }
-
 .cardDivider{
   height:2px;
   margin:12px 0 6px;
   background:linear-gradient(90deg, rgba(79,70,229,.55), rgba(6,182,212,.55));
   border-radius:999px;
-  opacity:.75;
+  opacity:.7;
 }
+label{ font-weight:1000; }
 
-label{ font-weight:900; }
 input, select{
   width:100%;
   padding:12px;
@@ -114,174 +110,198 @@ input, select{
   font-size:16px;
   background:#fff;
 }
-
 .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-
-/* =========================
-   HAUPTSEITE: TABELLE (modern + horizontal scroll)
-   - Tag & Stunden NICHT sticky
-   ========================= */
-.tableWrap{
-  margin-top:10px;
-  background:linear-gradient(180deg, rgba(255,255,255,.96), #fff);
-  border:1px solid rgba(226,232,240,.95);
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:var(--shadow2);
-}
-
-/* Hinweis-Leiste (Wischen) */
-.swipeHint{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:10px 12px;
-  border-bottom:1px solid rgba(226,232,240,.85);
-  background:linear-gradient(90deg, rgba(79,70,229,.06), rgba(6,182,212,.05));
-}
-.swipeHintLeft{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-width:0;
-}
-.swipePill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#fff;
-  border:1px solid rgba(226,232,240,.9);
-  box-shadow:0 6px 14px rgba(0,0,0,.05);
-  font-weight:900;
-  font-size:12px;
-  color:#0b1220;
-  white-space:nowrap;
-}
-.swipeText{
-  font-size:12px;
-  color:var(--muted);
-  font-weight:700;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.swipeClose{
-  width:auto;
-  padding:8px 10px;
-  border-radius:12px;
-  font-size:12px;
-  font-weight:1000;
-}
-
-.tableScroll{
-  overflow:auto;
-  -webkit-overflow-scrolling: touch;
-  position:relative;
-}
-
-/* dezenter Scroll-Fade rechts */
-.tableScroll::after{
-  content:"";
-  pointer-events:none;
-  position:absolute;
-  top:0; right:0; bottom:0;
-  width:22px;
-  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.92));
-}
-
-.entryTable{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  table-layout:fixed;
-  min-width: 640px; /* <<< zwingt Horizontal-Scroll auf Handy */
-}
-
-.entryTable thead th{
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
-  font-weight:1000;
-  font-size:13px;
-  padding:10px 8px;
-  border-bottom:1px solid var(--border);
-  color:#0b1220;
-}
-
-.entryTable td{
-  padding:10px 8px;
-  border-bottom:1px solid rgba(226,232,240,.85);
-  vertical-align:middle;
-  background:#fff;
-}
-
-.entryTable tbody tr:nth-child(even) td{
-  background:#fbfcff;
-}
-
-.entryTable select,
-.entryTable input[type="time"]{
-  width:100%;
-  padding:10px 12px;
-  border-radius:16px;
-  border:1px solid var(--border);
-  font-size:15px;
-  background:#fff;
-  box-shadow: inset 0 1px 0 rgba(15,23,42,.03);
-}
-
-.entryTable select{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.entryHours{
-  width:100%;
-  padding:10px 12px;
-  border-radius:16px;
-  border:1px solid var(--border);
-  background:#f8fafc;
-  font-weight:1000;
-  font-size:15px;
-  text-align:right;
-}
-
-.right{ text-align:right; }
-
-/* Spaltenbreiten */
-.colDay{ width:70px; }
-.colOrt{ width:280px; }   /* mehr Platz */
-.colTime{ width:120px; }
-.colStd{ width:120px; }
-
-/* Active row highlight */
-.trActive td{
-  background: linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08)) !important;
-}
-.trActive td:first-child{
-  box-shadow: inset 4px 0 0 rgba(79,70,229,.65);
-}
 
 /* Total */
 .total{
-  position:sticky;
-  bottom:10px;
-  z-index:40;
   margin-top:12px;
-  background:rgba(255,255,255,.92);
-  border:1px solid rgba(226,232,240,.9);
+  background:#fff;
+  border:1px solid var(--border);
   border-radius:18px;
   padding:14px;
   font-size:22px;
   font-weight:1000;
   text-align:center;
-  box-shadow:var(--shadow);
-  backdrop-filter: blur(10px);
+  box-shadow:0 -10px 22px rgba(0,0,0,.06);
+}
+
+/* =========================
+   HAUPTSEITE: TABLE (VARIANTE B)
+   - horizontal scroll
+   - modern scroll hint
+   ========================= */
+.tableCard{
+  margin-top:10px;
+  background:#fff;
+  border:1px solid rgba(226,232,240,.96);
+  border-radius:18px;
+  box-shadow:var(--shadow2);
+  overflow:hidden;
+}
+
+/* Kopfbereich über der Tabelle */
+.tableHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border-bottom:1px solid var(--border);
+}
+.tableHeader b{ font-size:14px; }
+.tableHeader .hint{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+/* Scroll area */
+.tableScroll{
+  position:relative;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* hübsche Fade-Ränder als Scroll-Hinweis */
+.tableScroll::before,
+.tableScroll::after{
+  content:"";
+  position:absolute;
+  top:0; bottom:0;
+  width:22px;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .18s ease;
+}
+.tableScroll::before{
+  left:0;
+  background:linear-gradient(90deg, rgba(255,255,255,.98), rgba(255,255,255,0));
+}
+.tableScroll::after{
+  right:0;
+  background:linear-gradient(270deg, rgba(255,255,255,.98), rgba(255,255,255,0));
+}
+.tableScroll.hasLeft::before{ opacity:1; }
+.tableScroll.hasRight::after{ opacity:1; }
+
+/* Tabelle */
+.entryTable{
+  width:100%;
+  min-width: 560px; /* sorgt dafür, dass Scroll möglich ist (B) */
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:fixed;
+}
+
+.entryTable thead th{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border-bottom:1px solid var(--border);
+  font-weight:1000;
+  font-size:13px;
+  padding:10px 8px;
+  white-space:nowrap;
+}
+
+.entryTable td{
+  border-bottom:1px solid rgba(226,232,240,.85);
+  padding:10px 8px;
+  vertical-align:middle;
+}
+
+/* Spaltenbreiten: optimiert für Handy + Scroll */
+.colDay{ width:70px; }
+.colOrt{ width:220px; }     /* <-- hier ist der Trick: passt gut, weil wir kurz anzeigen */
+.colTime{ width:92px; }
+.colStd{ width:110px; }
+
+/* Inputs in Tabelle */
+.entryTable select,
+.entryTable input[type="time"]{
+  width:100%;
+  padding:10px 12px;
+  border-radius:999px;
+  border:1px solid rgba(226,232,240,.95);
+  font-size:14px;
+  background:#fff;
+}
+
+.entryHours{
+  width:100%;
+  padding:10px 12px;
+  border-radius:999px;
+  border:1px solid rgba(226,232,240,.95);
+  background:#f8fafc;
+  font-weight:1000;
+  font-size:14px;
+  text-align:right;
+}
+
+.right{ text-align:right; }
+
+/* Aktive Zeile */
+.trActive td{
+  background: linear-gradient(90deg, rgba(79,70,229,.08), rgba(6,182,212,.06));
+}
+.trActive td:first-child{
+  box-shadow: inset 4px 0 0 rgba(79,70,229,.55);
+}
+
+/* Mobile tweaks */
+@media (max-width:420px){
+  .entryTable{ min-width: 540px; }
+  .colOrt{ width:210px; }
+  .colStd{ width:105px; }
+  .entryTable thead th{ font-size:12.5px; padding:10px 7px; }
+}
+
+/* =========================
+   PRINT
+   ========================= */
+@page{ size:A4 landscape; margin:3mm; }
+#printArea{ display:none; }
+
+@media print{
+  body{ background:#fff; }
+  .topbar, .card, .total, .tableCard, .modalBack, .pinBack{ display:none !important; }
+  .wrap{ max-width:100% !important; padding:0 !important; }
+  #printArea{ display:block !important; }
+
+  #printArea{
+    zoom: 0.92;
+    transform: scale(0.92);
+    transform-origin: top left;
+    width: 108.7%;
+  }
+
+  #printTitle{ font-size:11pt; font-weight:1000; margin:0 0 1.5mm 0; }
+  #printMetaTop{ font-size:8.5pt; margin:0 0 1.5mm 0; }
+  #printMetaBottom{ font-size:8.5pt; margin:1.5mm 0 0 0; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+    font-size:9pt;
+    line-height:1.02;
+  }
+  th, td{
+    border:1px solid #111;
+    padding:2px 4px;
+    vertical-align:middle;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  th{ background:#eaeaea; font-weight:900; }
+  thead{ display:table-header-group; }
+  tfoot{ display:table-footer-group; }
+  tr{ page-break-inside:avoid; }
+  .right{ text-align:right; }
+  .empty td{ background:#f3f4f6; }
 }
 
 /* Preview modal */
@@ -322,52 +342,6 @@ input, select{
   gap:8px;
   padding:12px;
   border-top:1px solid var(--border);
-}
-
-/* =========================
-   PRINT: 1 Seite (GARANTIERT)
-   ========================= */
-@page{ size:A4 landscape; margin:3mm; }
-#printArea{ display:none; }
-
-@media print{
-  body{ background:#fff; }
-  .topbar, .card, .total, .tableWrap, .modalBack, .pinBack{ display:none !important; }
-  .wrap{ max-width:100% !important; padding:0 !important; }
-  #printArea{ display:block !important; }
-
-  #printArea{
-    zoom: 0.92;
-    transform: scale(0.92);
-    transform-origin: top left;
-    width: 108.7%;
-  }
-
-  #printTitle{ font-size:11pt; font-weight:1000; margin:0 0 1.5mm 0; }
-  #printMetaTop{ font-size:8.5pt; margin:0 0 1.5mm 0; }
-  #printMetaBottom{ font-size:8.5pt; margin:1.5mm 0 0 0; }
-
-  table{
-    width:100%;
-    border-collapse:collapse;
-    table-layout:fixed;
-    font-size:9pt;
-    line-height:1.02;
-  }
-  th, td{
-    border:1px solid #111;
-    padding:2px 4px;
-    vertical-align:middle;
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
-  }
-  th{ background:#eaeaea; font-weight:900; }
-  thead{ display:table-header-group; }
-  tfoot{ display:table-footer-group; }
-  tr{ page-break-inside:avoid; }
-  .right{ text-align:right; }
-  .empty td{ background:#f3f4f6; }
 }
 
 /* PIN Overlay */
@@ -441,16 +415,11 @@ input, select{
     <div class="cardDivider"></div>
   </div>
 
-  <!-- HAUPTSEITE: EDITIER-TABELLE -->
-  <div class="tableWrap">
-
-    <!-- >>> WISCH-HINWEIS (NEU) <<< -->
-    <div class="swipeHint" id="swipeHint">
-      <div class="swipeHintLeft">
-        <div class="swipePill">↔ Wischen</div>
-        <div class="swipeText">Tabelle ist breit – nach rechts/links scrollen</div>
-      </div>
-      <button type="button" class="swipeClose" id="swipeClose">OK</button>
+  <!-- TABELLE -->
+  <div class="tableCard">
+    <div class="tableHeader">
+      <b>Eintragen</b>
+      <div class="hint">↔ nach rechts wischen</div>
     </div>
 
     <div class="tableScroll" id="tableScroll">
@@ -482,7 +451,7 @@ input, select{
       </div>
       <div class="modalBody">
         <div id="previewTable"></div>
-        <div id="previewTotal" class="small" style="margin-top:10px; font-weight:900;"></div>
+        <div id="previewTotal" class="small" style="margin-top:10px; font-weight:1000;"></div>
       </div>
       <div class="modalBtns">
         <button class="primary" type="button" id="exportFromPreview">PDF Export</button>
@@ -526,11 +495,17 @@ input, select{
    1) deinen Apps Script WebApp EXEC Link (muss mit /exec enden)
    2) deinen PIN (zum Öffnen)
    ========================================================= */
-const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";
-const APP_PIN     = "1234";
+const WEB_APP_URL = "HIER_DEIN_EXEC_LINK"; // <-- HIER EINTRAGEN
+const APP_PIN     = "1234";               // <-- HIER EINTRAGEN
 
-/* ====== Rest wie gehabt ====== */
-const ORTE = ["Niendorf Nord","Hagenbecks Tierpark","Farmsen","Ochsenzoll"];
+/* Orte: VALUE bleibt lang (für Email/PDF), Anzeige kann kurz sein */
+const ORTE = [
+  { v:"Niendorf Nord",     l:"Niendorf Nord",     s:"Niendorf" },
+  { v:"Hagenbecks Tierpark", l:"Hagenbecks Tierpark", s:"H. Tierpark" },
+  { v:"Farmsen",           l:"Farmsen",           s:"Farmsen" },
+  { v:"Ochsenzoll",        l:"Ochsenzoll",        s:"Ochsenzoll" },
+];
+
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const nameEl = document.getElementById("name");
@@ -558,16 +533,14 @@ const printMetaBottomEl  = document.getElementById("printMetaBottom");
 const printBodyEl  = document.getElementById("printBody");
 const printTotalEl = document.getElementById("printTotal");
 
+/* Table scroll hint */
+const tableScroll = document.getElementById("tableScroll");
+
 /* PIN elements */
 const pinBack = document.getElementById("pinBack");
 const pinInput = document.getElementById("pinInput");
 const pinBtn = document.getElementById("pinBtn");
 const pinError = document.getElementById("pinError");
-
-/* Swipe hint elements */
-const swipeHint = document.getElementById("swipeHint");
-const swipeClose = document.getElementById("swipeClose");
-const tableScroll = document.getElementById("tableScroll");
 
 let current = new Date(); current.setDate(1);
 let dirty = false;
@@ -589,7 +562,7 @@ function setActiveRow(tr){
   if(tr) tr.classList.add("trActive");
 }
 
-/* Jahr im Dropdown 2-stellig anzeigen (Value bleibt 2026) */
+/* Jahr Dropdown: intern 2026, Anzeige 26 */
 function fillMonthYear(){
   monthEl.innerHTML="";
   yearEl.innerHTML="";
@@ -604,81 +577,13 @@ function fillMonthYear(){
   const nowY=new Date().getFullYear();
   for(let i=nowY-3;i<=nowY+6;i++){
     const o=document.createElement("option");
-    o.value=String(i);
-    o.textContent=String(i).slice(-2);
+    o.value=String(i);                 // intern 2026
+    o.textContent=String(i).slice(-2); // Anzeige 26
     yearEl.appendChild(o);
   }
 
   monthEl.value=String(current.getMonth()+1);
   yearEl.value=String(current.getFullYear());
-}
-
-function build(){
-  fillMonthYear();
-
-  const m=parseInt(monthEl.value,10);
-  const y=parseInt(yearEl.value,10);
-  const days=daysInMonth(m,y);
-
-  rowsEl.innerHTML="";
-
-  for(let d=1; d<=days; d++){
-    const tr = document.createElement("tr");
-    tr.dataset.day = String(d);
-
-    const shortDate = `${pad2(d)}.${pad2(m)}`;
-
-    tr.innerHTML = `
-      <td class="colDay"><b>${shortDate}</b></td>
-
-      <td class="colOrt">
-        <select class="ort">
-          <option value="" selected disabled>Wählen</option>
-          ${ORTE.map(o=>`<option value="${o}">${o}</option>`).join("")}
-        </select>
-      </td>
-
-      <td class="colTime"><input type="time" class="start"></td>
-      <td class="colTime"><input type="time" class="end"></td>
-
-      <td class="colStd right">
-        <input type="text" class="hours entryHours" placeholder="0 Std" readonly>
-      </td>
-    `;
-
-    const ort = tr.querySelector(".ort");
-    const start = tr.querySelector(".start");
-    const end = tr.querySelector(".end");
-    const hours = tr.querySelector(".hours");
-
-    function activate(){ setActiveRow(tr); }
-
-    ort.addEventListener("change", ()=>{ activate(); markDirty(); saveState(); });
-    start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
-    end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
-
-    start.addEventListener("focus", activate);
-    end.addEventListener("focus", activate);
-    ort.addEventListener("focus", activate);
-
-    hours.addEventListener("focus",(e)=>e.target.blur());
-
-    rowsEl.appendChild(tr);
-  }
-
-  loadState();
-  updateTotal();
-
-  if(exported && !dirty) pdfBtn.disabled=true;
-}
-
-function applyMonthAuto(){
-  const mm=parseInt(monthEl.value,10);
-  const yy=parseInt(yearEl.value,10);
-  current=new Date(yy, mm-1, 1);
-  dirty=false;
-  exported=false;
-  build();
 }
 
 function timeToMinutes(t){
@@ -693,6 +598,21 @@ function formatHoursSmart(hours){
   const rounded = Math.round(hours * 100) / 100;
   if(Number.isInteger(rounded)) return rounded + " Std";
   return rounded.toString() + " Std";
+}
+
+function parseHoursFromField(v){
+  if(!v) return NaN;
+  const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : NaN;
+}
+
+function updateTotal(){
+  let sum=0;
+  document.querySelectorAll(".hours").forEach(i=>{
+    const v=parseHoursFromField(i.value);
+    if(!isNaN(v)) sum+=v;
+  });
+  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
 }
 
 function autoHours(row){
@@ -712,19 +632,103 @@ function autoHours(row){
   updateTotal();
 }
 
-function parseHoursFromField(v){
-  if(!v) return NaN;
-  const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
-  return m ? parseFloat(m[1]) : NaN;
+/* Ort: nach Auswahl kurz anzeigen, beim Öffnen wieder lang */
+function rememberOrigOptions(selectEl){
+  [...selectEl.options].forEach(op=>{
+    if(!op.getAttribute("data-orig")) op.setAttribute("data-orig", op.textContent);
+  });
+}
+function restoreLongOptions(selectEl){
+  [...selectEl.options].forEach(op=>{
+    const orig = op.getAttribute("data-orig");
+    if(orig) op.textContent = orig;
+  });
+}
+function applyShortSelected(selectEl){
+  const opt = selectEl.options[selectEl.selectedIndex];
+  if(!opt) return;
+  const short = opt.getAttribute("data-short");
+  if(short) opt.textContent = short;
 }
 
-function updateTotal(){
-  let sum=0;
-  document.querySelectorAll(".hours").forEach(i=>{
-    const v=parseHoursFromField(i.value);
-    if(!isNaN(v)) sum+=v;
-  });
-  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
+function build(){
+  fillMonthYear();
+
+  const m=parseInt(monthEl.value,10);
+  const y=parseInt(yearEl.value,10);
+  const days=daysInMonth(m,y);
+
+  rowsEl.innerHTML="";
+
+  for(let d=1; d<=days; d++){
+    const tr = document.createElement("tr");
+    tr.dataset.day = String(d);
+
+    const shortDate = `${pad2(d)}.${pad2(m)}`; // dd.mm
+
+    tr.innerHTML = `
+      <td><b>${shortDate}</b></td>
+
+      <td>
+        <select class="ort">
+          <option value="" selected disabled data-short="Wählen">Wählen</option>
+          ${ORTE.map(o=>`<option value="${o.v}" data-short="${o.s}">${o.l}</option>`).join("")}
+        </select>
+      </td>
+
+      <td><input type="time" class="start"></td>
+      <td><input type="time" class="end"></td>
+
+      <td class="right">
+        <input type="text" class="hours entryHours" placeholder="0 Std" readonly>
+      </td>
+    `;
+
+    const ort = tr.querySelector(".ort");
+    const start = tr.querySelector(".start");
+    const end = tr.querySelector(".end");
+    const hours = tr.querySelector(".hours");
+
+    function activate(){ setActiveRow(tr); }
+
+    /* Ort Dropdown: beim Öffnen lang, nach Auswahl kurz */
+    ort.addEventListener("mousedown", ()=>{ rememberOrigOptions(ort); restoreLongOptions(ort); });
+    ort.addEventListener("focus", ()=>{ rememberOrigOptions(ort); restoreLongOptions(ort); });
+
+    ort.addEventListener("change", ()=>{
+      activate();
+      rememberOrigOptions(ort);
+      applyShortSelected(ort);
+      markDirty(); saveState();
+    });
+
+    start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
+    end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
+
+    start.addEventListener("focus", activate);
+    end.addEventListener("focus", activate);
+
+    hours.addEventListener("focus",(e)=>e.target.blur());
+
+    rowsEl.appendChild(tr);
+  }
+
+  loadState();
+  updateTotal();
+
+  if(exported && !dirty) pdfBtn.disabled=true;
+
+  // Scroll hint initial
+  updateScrollHints();
+}
+
+function applyMonthAuto(){
+  const mm=parseInt(monthEl.value,10);
+  const yy=parseInt(yearEl.value,10);
+  current=new Date(yy, mm-1, 1);
+  dirty=false;
+  exported=false;
+  build();
 }
 
 function getState(){
@@ -765,8 +769,13 @@ function loadState(){
     const rowEls=document.querySelectorAll("#rows tr");
     (st.rows||[]).forEach((r, idx)=>{
       if(!rowEls[idx]) return;
+
       const ortSel=rowEls[idx].querySelector(".ort");
       if(r.ort) ortSel.value=r.ort; else ortSel.selectedIndex=0;
+
+      // nach dem Setzen: wieder kurz anzeigen
+      rememberOrigOptions(ortSel);
+      applyShortSelected(ortSel);
 
       rowEls[idx].querySelector(".start").value=r.start||"";
       rowEls[idx].querySelector(".end").value=r.end||"";
@@ -836,7 +845,7 @@ function allesLoeschen(){
   build();
 }
 
-/*** Vorschau ***/
+/*** Vorschau (wie gehabt) ***/
 function openPreview(){
   const name=(nameEl.value||"").trim();
   const mm=pad2(current.getMonth()+1);
@@ -877,7 +886,7 @@ function openPreview(){
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
-        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs}</td>
+        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:1000;">${hrs}</td>
       </tr>
     `);
   });
@@ -951,31 +960,18 @@ function requirePin(){
   });
 }
 
-/* ===== Swipe-Hinweis: nur 1x zeigen ===== */
-function setupSwipeHint(){
-  const seen = localStorage.getItem("sad_swipe_hint_ok")==="1";
-  if(seen){
-    swipeHint.style.display="none";
-    return;
-  }
+/* Scroll hint logic */
+function updateScrollHints(){
+  const el = tableScroll;
+  if(!el) return;
+  const max = el.scrollWidth - el.clientWidth;
+  const left = el.scrollLeft;
 
-  function hide(){
-    swipeHint.style.display="none";
-    localStorage.setItem("sad_swipe_hint_ok","1");
-  }
-
-  swipeClose.addEventListener("click", hide);
-
-  /* Wenn User einmal nach rechts/links scrollt => ausblenden */
-  let moved = false;
-  tableScroll.addEventListener("scroll", ()=>{
-    if(moved) return;
-    if(tableScroll.scrollLeft > 10){
-      moved = true;
-      hide();
-    }
-  }, { passive:true });
+  el.classList.toggle("hasLeft", left > 2);
+  el.classList.toggle("hasRight", left < max - 2);
 }
+tableScroll.addEventListener("scroll", updateScrollHints);
+window.addEventListener("resize", updateScrollHints);
 
 /*** EVENTS ***/
 pdfBtn.addEventListener("click", exportPDF);
@@ -997,7 +993,6 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 fillMonthYear();
 build();
 requirePin();
-setupSwipeHint();
 </script>
 </body>
 </html>
