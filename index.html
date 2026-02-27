@@ -18,6 +18,13 @@
   --accent2:#06b6d4;
   --shadow: 0 12px 28px rgba(0,0,0,.10);
 
+  /* Column header colors */
+  --hTag:   rgba(79,70,229,.18);
+  --hKehre: rgba(6,182,212,.18);
+  --hBeg:   rgba(34,197,94,.18);
+  --hEnd:   rgba(245,158,11,.18);
+  --hStd:   rgba(244,63,94,.16);
+
   /* PIN Background (wird per JS gesetzt) */
   --pinBg: none;
 }
@@ -117,7 +124,7 @@ input, select{
 }
 
 /* =========================
-   HAUPTSEITE: TABELLE (EDITIERBAR)
+   HAUPTSEITE: TABELLE (MAXIMAL TIGHT)
    ========================= */
 .tableCard{
   margin-top:10px;
@@ -134,10 +141,7 @@ input, select{
   gap:10px;
   padding:2px 2px 10px;
 }
-.tableHeadRow .title{
-  font-weight:1000;
-  font-size:16px;
-}
+.tableHeadRow .title{ font-weight:1000; font-size:16px; }
 .tableHeadRow .hint{
   color:var(--muted);
   font-weight:800;
@@ -154,31 +158,38 @@ input, select{
   -webkit-overflow-scrolling:touch;
 }
 
-/* Tabelle selbst */
+/* Tabelle: tight + kein Quetschen */
 .entryTable{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
-  min-width: 560px; /* ↓ noch kleiner (weil Stunden schmaler) */
+  min-width: 600px; /* tight, aber genug damit nichts zerquetscht */
 }
-
 .entryTable th{
-  background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
   font-weight:1000;
   font-size:13px;
-  padding:9px 6px;
+  padding:8px 6px;
   border-bottom:1px solid var(--border);
-  white-space:nowrap;
+  letter-spacing:.2px;
 }
 .entryTable td{
-  padding:8px 6px;
+  padding:6px 5px;     /* tighter */
   border-bottom:1px solid var(--border);
   vertical-align:middle;
 }
 
+/* farblich unterscheidbare Header */
+.thTag   { background:linear-gradient(90deg, var(--hTag),   rgba(255,255,255,.40)); }
+.thKehre { background:linear-gradient(90deg, var(--hKehre), rgba(255,255,255,.40)); }
+.thBeg   { background:linear-gradient(90deg, var(--hBeg),   rgba(255,255,255,.40)); }
+.thEnd   { background:linear-gradient(90deg, var(--hEnd),   rgba(255,255,255,.40)); }
+.thStd   { background:linear-gradient(90deg, var(--hStd),   rgba(255,255,255,.40)); }
+
 .entryTable select,
 .entryTable input[type="time"]{
   width:100%;
+  display:block;     /* <-- FIX: füllt Zelle (kein heller Streifen) */
+  min-width:0;       /* <-- FIX: verhindert komische Breiten */
   padding:9px 10px;
   border-radius:12px;
   border:1px solid var(--border);
@@ -186,9 +197,26 @@ input, select{
   background:#fff;
 }
 
-/* Stunden: nur Zahl, deshalb extra kompakt */
+/* Select “clean” */
+.entryTable select{
+  -webkit-appearance:none;
+  appearance:none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) 50%,
+    calc(100% - 10px) 50%;
+  background-size:5px 5px, 5px 5px;
+  background-repeat:no-repeat;
+  padding-right:26px;
+}
+
+/* Stunden: nur Zahl im Feld (Std nur im Header) */
 .entryHours{
   width:100%;
+  display:block;
+  min-width:0;
   padding:9px 10px;
   border-radius:12px;
   border:1px solid var(--border);
@@ -196,15 +224,14 @@ input, select{
   font-weight:1000;
   font-size:14px;
   text-align:right;
-  white-space:nowrap;
 }
 .right{ text-align:right; }
 
-/* Spaltenbreiten: jetzt deutlich kompakter */
-.colDay{ width:72px; }
-.colKehre{ width:160px; }   /* reicht für H. Tierpark */
-.colTime{ width:108px; }    /* Beginn/Ende kompakt */
-.colStd{ width:88px; }      /* Stunden sehr schmal */
+/* Spaltenbreiten (maximal tight, ohne Quetschen) */
+.colDay  { width:70px; }
+.colKehre{ width:170px; } /* reicht für "H. Tierpark" */
+.colTime { width:110px; } /* Zeiten kompakt aber lesbar */
+.colStd  { width:90px;  } /* Zahl passt, keine „Std“ im Feld */
 
 /* Active row highlight */
 .trActive td{
@@ -215,7 +242,7 @@ input, select{
 }
 
 /* =========================
-   PRINT: 1 Seite
+   PRINT: 1 Seite (GARANTIERT)
    ========================= */
 @page{ size:A4 landscape; margin:3mm; }
 #printArea{ display:none; }
@@ -325,7 +352,6 @@ input, select{
   width:min(420px, 100%);
   border-radius:22px;
   padding:18px;
-
   background: rgba(255,255,255,0.10);
   border:1px solid rgba(255,255,255,0.18);
   box-shadow: 0 24px 60px rgba(0,0,0,.45);
@@ -412,7 +438,7 @@ input, select{
     <div class="cardDivider"></div>
   </div>
 
-  <!-- Tabelle -->
+  <!-- Tabelle (maximal tight) -->
   <div class="tableCard">
     <div class="tableHeadRow">
       <div class="title">Eintragen</div>
@@ -423,11 +449,11 @@ input, select{
       <table class="entryTable">
         <thead>
           <tr>
-            <th class="colDay">Tag</th>
-            <th class="colKehre">KEHRE</th>
-            <th class="colTime">Beginn</th>
-            <th class="colTime">Ende</th>
-            <th class="colStd right">Stunden</th>
+            <th class="colDay thTag">Tag</th>
+            <th class="colKehre thKehre">KEHRE</th>
+            <th class="colTime thBeg">Beginn</th>
+            <th class="colTime thEnd">Ende</th>
+            <th class="colStd thStd right">Std</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -469,7 +495,7 @@ input, select{
           <th style="width:44%;">Einsatzort</th>
           <th style="width:16%;">Beginn</th>
           <th style="width:16%;">Ende</th>
-          <th class="right" style="width:16%;">Stunden</th>
+          <th class="right" style="width:16%;">Std</th>
         </tr>
       </thead>
       <tbody id="printBody"></tbody>
@@ -496,9 +522,15 @@ input, select{
 const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";
 const APP_PIN     = "1234";
 
+/* Bild:
+   - GitHub Pages: am besten lokal im Repo, z.B. "images/hochbahn.jpg"
+   - oder volle URL
+*/
 const PIN_BG_URL  = "HIER_DEIN_BILD_URL";
 
-/* ORTE */
+/* ====== Rest ====== */
+
+/* ORTE: Dropdown zeigt FULL, Feld danach SHORT */
 const ORTE = [
   { value: "Niendorf Nord",         short: "Niendorf" },
   { value: "Hagenbecks Tierpark",   short: "H. Tierpark" },
@@ -506,7 +538,7 @@ const ORTE = [
   { value: "Ochsenzoll",            short: "Ochsenzoll" }
 ];
 
-const STORAGE_PREFIX = "sad_stundenformular_v10:";
+const STORAGE_PREFIX = "sad_stundenformular_v11:";
 
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
@@ -559,6 +591,7 @@ function setActiveRow(tr){
   if(tr) tr.classList.add("trActive");
 }
 
+/* Jahr intern 2026, Anzeige 26 */
 function fillMonthYear(){
   monthEl.innerHTML="";
   yearEl.innerHTML="";
@@ -583,9 +616,11 @@ function fillMonthYear(){
 }
 
 function buildOrtOptions(){
+  // Option-Text bleibt FULL, Short steht im data-short
   return ORTE.map(o => `<option value="${o.value}" data-short="${o.short}">${o.value}</option>`).join("");
 }
 
+/* Feld nach Auswahl SHORT, Dropdown beim Öffnen FULL */
 function applyShortLabel(selectEl){
   const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
   if(!opt) return;
@@ -690,19 +725,23 @@ function timeToMinutes(t){
   return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
 
-/* Nur Zahl für Zeile, keine "Std" */
-function formatHoursNumber(hours){
-  if(hours == null || isNaN(hours)) return "";
-  const rounded = Math.round(hours * 100) / 100;
-  return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+function round2(n){
+  return Math.round(n*100)/100;
 }
 
-/* Für Gesamt weiterhin mit "Std" */
-function formatHoursSmart(hours){
+/* Zellen: nur Zahl (Std nur im Header) */
+function formatHoursCell(hours){
   if(hours == null || isNaN(hours)) return "";
-  const rounded = Math.round(hours * 100) / 100;
-  if(Number.isInteger(rounded)) return rounded + " Std";
-  return rounded.toString() + " Std";
+  const v = round2(hours);
+  // ohne unnötige Nullen
+  return Number.isInteger(v) ? String(v) : String(v);
+}
+
+/* Gesamt: mit "Std" */
+function formatHoursTotal(hours){
+  if(hours == null || isNaN(hours)) return "";
+  const v = round2(hours);
+  return (Number.isInteger(v) ? String(v) : String(v)) + " Std";
 }
 
 function autoHours(row){
@@ -718,13 +757,12 @@ function autoHours(row){
   let diff=e-s;
   if(diff<0) diff+=1440;
   const hours = diff/60;
-
-  out.value = formatHoursNumber(hours); /* ← nur Zahl */
+  out.value = formatHoursCell(hours);
   updateTotal();
 }
 
 function parseHoursFromField(v){
-  if(!v && v!==0) return NaN;
+  if(v===null || v===undefined) return NaN;
   const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
   return m ? parseFloat(m[1]) : NaN;
 }
@@ -735,7 +773,7 @@ function updateTotal(){
     const v=parseHoursFromField(i.value);
     if(!isNaN(v)) sum+=v;
   });
-  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
+  sumEl.textContent = formatHoursTotal(sum) || "0 Std";
 }
 
 function getState(){
@@ -826,8 +864,8 @@ function buildPrintTable(){
     printBodyEl.appendChild(tr);
   });
 
-  printTotalEl.textContent = formatHoursNumber(sum); /* Zahl im Feld */
-  printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
+  printTotalEl.textContent = String(round2(sum));
+  printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursTotal(sum)}`;
 }
 
 function exportPDF(){
@@ -865,7 +903,7 @@ function openPreview(){
           <th style="border:1px solid #ddd; padding:8px; width:42%;">Einsatzort</th>
           <th style="border:1px solid #ddd; padding:8px; width:16%;">Beginn</th>
           <th style="border:1px solid #ddd; padding:8px; width:16%;">Ende</th>
-          <th style="border:1px solid #ddd; padding:8px; width:16%; text-align:right;">Stunden</th>
+          <th style="border:1px solid #ddd; padding:8px; width:16%; text-align:right;">Std</th>
         </tr>
       </thead>
       <tbody>
@@ -895,7 +933,7 @@ function openPreview(){
 
   parts.push(`</tbody></table>`);
   previewTable.innerHTML=parts.join("");
-  previewTotal.textContent = `Gesamtstunden: ${formatHoursSmart(sum)}`;
+  previewTotal.textContent = `Gesamtstunden: ${formatHoursTotal(sum)}`;
   modalBack.style.display="block";
 }
 function closePreview(){ modalBack.style.display="none"; }
