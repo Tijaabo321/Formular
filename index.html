@@ -378,6 +378,12 @@ input, select{
   color:#fecaca;
   display:none;
 }
+
+/* ===== NUR NEU: Name-Pflicht-Feedback (nur für Senden) ===== */
+.inputError{
+  border-color: rgba(239,68,68,.92) !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.18);
+}
 </style>
 </head>
 
@@ -423,6 +429,10 @@ input, select{
     <div>
       <label>Name:</label>
       <input id="name" placeholder="Bitte hier deinen Namen eintragen">
+      <!-- NUR NEU: Fehlermeldung (nur bei Senden ohne Name) -->
+      <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
+        Bitte erst Name eintragen.
+      </div>
     </div>
 
     <div style="margin-top:10px;">
@@ -537,6 +547,9 @@ const yearEl  = document.getElementById("year");
 const rowsEl  = document.getElementById("rows");
 const sumEl   = document.getElementById("sum");
 
+/* NUR NEU: Name-Error Element */
+const nameErrorEl = document.getElementById("nameError");
+
 const pdfBtn  = document.getElementById("pdfBtn");
 const prevBtn = document.getElementById("prevBtn");
 const sendBtn = document.getElementById("sendBtn");
@@ -580,6 +593,18 @@ function markDirty(){
 function setActiveRow(tr){
   document.querySelectorAll(".trActive").forEach(x=>x.classList.remove("trActive"));
   if(tr) tr.classList.add("trActive");
+}
+
+/* NUR NEU: Name-Fehler ein/aus */
+function setNameError(on){
+  if(!nameErrorEl) return;
+  if(on){
+    nameEl.classList.add("inputError");
+    nameErrorEl.style.display = "block";
+  }else{
+    nameEl.classList.remove("inputError");
+    nameErrorEl.style.display = "none";
+  }
 }
 
 /* Jahr intern 2026, Anzeige 26 */
@@ -925,6 +950,14 @@ function closePreview(){ modalBack.style.display="none"; }
 
 /* ===== Senden + Hinweis ===== */
 async function senden(){
+  /* NUR NEU: Name ist Pflicht für Senden */
+  const nm = (nameEl.value || "").trim();
+  if(!nm){
+    setNameError(true);
+    nameEl.focus();
+    return;
+  }
+
   if(!confirm("Hinweis: Bitte sende nur EINMAL im Monat deine Stunden (nicht täglich). Jetzt senden?")){
     return;
   }
@@ -1001,7 +1034,13 @@ modalBack.addEventListener("click",(e)=>{ if(e.target===modalBack) closePreview(
 
 monthEl.addEventListener("change", applyMonthAuto);
 yearEl.addEventListener("change", applyMonthAuto);
-nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
+
+/* NUR ERGÄNZT: beim Tippen Name-Fehler weg */
+nameEl.addEventListener("input", ()=>{
+  setNameError(false);
+  markDirty();
+  saveState();
+});
 
 /*** START ***/
 (function init(){
@@ -1018,9 +1057,3 @@ nameEl.addEventListener("input", ()=>{ markDirty(); saveState(); });
 </script>
 </body>
 </html>
-
-
-
-
-
-
