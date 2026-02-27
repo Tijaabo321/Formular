@@ -13,24 +13,17 @@
   --muted:#64748b;
   --border:#e2e8f0;
   --danger:#ef4444;
-
   --accent:#4f46e5;
   --accent2:#06b6d4;
-
-  --shadow: 0 14px 34px rgba(0,0,0,.10);
-  --shadow2: 0 8px 18px rgba(0,0,0,.06);
+  --shadow: 0 12px 28px rgba(0,0,0,.10);
 }
-
 *{ box-sizing:border-box; }
-html,body{ height:100%; }
-
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   background:linear-gradient(180deg, #eef2ff 0%, var(--bg) 40%);
   color:var(--text);
 }
-
 .wrap{ max-width:560px; margin:0 auto; padding:12px; }
 
 /* Topbar */
@@ -38,20 +31,18 @@ body{
   position:sticky;
   top:10px;
   z-index:60;
-  background:linear-gradient(135deg, rgba(79,70,229,.14), rgba(6,182,212,.12));
-  border:1px solid rgba(226,232,240,.95);
+  background:linear-gradient(135deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
+  border:1px solid rgba(226,232,240,.9);
   border-radius:18px;
   padding:10px;
   box-shadow:var(--shadow);
-  backdrop-filter: blur(7px);
+  backdrop-filter: blur(6px);
 }
-
 .btnrow{
   display:grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap:8px;
 }
-
 button{
   width:100%;
   padding:12px;
@@ -61,37 +52,33 @@ button{
   font-size:15px;
   cursor:pointer;
   background:#fff;
-  transition: transform .06s ease, filter .12s ease;
 }
-button:active{ transform: scale(.99); }
-button:disabled{ opacity:.55; cursor:not-allowed; }
-
 button.primary{
   background:linear-gradient(135deg, #111827, #1f2937);
   color:#fff;
   border-color:#111827;
-}
-button.send{
-  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.92));
-  color:#fff;
-  border-color:rgba(79,70,229,.35);
 }
 button.danger{
   color:var(--danger);
   border-color:rgba(239,68,68,.55);
   background:#fff;
 }
-
+button.send{
+  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
+  color:#fff;
+  border-color:rgba(79,70,229,.35);
+}
+button:disabled{ opacity:.55; cursor:not-allowed; }
 .small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
 /* Card */
 .card{
   margin-top:10px;
   background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.12));
-  border:1px solid rgba(226,232,240,.96);
+  border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   padding:14px;
-  box-shadow:var(--shadow2);
+  box-shadow:0 8px 18px rgba(0,0,0,.06);
 }
 .cardDivider{
   height:2px;
@@ -100,8 +87,7 @@ button.danger{
   border-radius:999px;
   opacity:.7;
 }
-label{ font-weight:1000; }
-
+label{ font-weight:900; }
 input, select{
   width:100%;
   padding:12px;
@@ -126,113 +112,72 @@ input, select{
 }
 
 /* =========================
-   HAUPTSEITE: TABLE (VARIANTE B)
-   - horizontal scroll
-   - modern scroll hint
+   HAUPTSEITE: TABELLE (EDITIERBAR)
    ========================= */
-.tableCard{
+.tableWrap{
   margin-top:10px;
   background:#fff;
-  border:1px solid rgba(226,232,240,.96);
+  border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
-  box-shadow:var(--shadow2);
   overflow:hidden;
+  box-shadow:0 6px 16px rgba(0,0,0,.05);
 }
 
-/* Kopfbereich über der Tabelle */
-.tableHeader{
+/* Header über der scrollbaren Tabelle */
+.tableHead{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
   padding:10px 12px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
-  border-bottom:1px solid var(--border);
+  background:linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border-bottom:1px solid rgba(226,232,240,.95);
 }
-.tableHeader b{ font-size:14px; }
-.tableHeader .hint{
-  font-size:12px;
-  color:var(--muted);
-  font-weight:800;
-}
+.tableHead b{ font-size:16px; }
+.tableHead span{ color:var(--muted); font-weight:800; font-size:13px; }
 
-/* Scroll area */
+/* Horizontal scroll */
 .tableScroll{
-  position:relative;
-  overflow:auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
 }
 
-/* hübsche Fade-Ränder als Scroll-Hinweis */
-.tableScroll::before,
-.tableScroll::after{
-  content:"";
-  position:absolute;
-  top:0; bottom:0;
-  width:22px;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .18s ease;
-}
-.tableScroll::before{
-  left:0;
-  background:linear-gradient(90deg, rgba(255,255,255,.98), rgba(255,255,255,0));
-}
-.tableScroll::after{
-  right:0;
-  background:linear-gradient(270deg, rgba(255,255,255,.98), rgba(255,255,255,0));
-}
-.tableScroll.hasLeft::before{ opacity:1; }
-.tableScroll.hasRight::after{ opacity:1; }
-
-/* Tabelle */
+/* ===== WICHTIG: min-width reduziert -> weniger unnötige breite ===== */
 .entryTable{
   width:100%;
-  min-width: 560px; /* sorgt dafür, dass Scroll möglich ist (B) */
+  min-width:520px;              /* <<< war größer, jetzt kompakter */
   border-collapse:separate;
   border-spacing:0;
   table-layout:fixed;
 }
 
-.entryTable thead th{
-  position:sticky;
-  top:0;
-  z-index:5;
-  background:linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
-  border-bottom:1px solid var(--border);
+.entryTable th{
+  background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
   font-weight:1000;
   font-size:13px;
-  padding:10px 8px;
-  white-space:nowrap;
+  padding:8px 6px;
+  border-bottom:1px solid rgba(226,232,240,.95);
 }
-
 .entryTable td{
-  border-bottom:1px solid rgba(226,232,240,.85);
-  padding:10px 8px;
+  padding:8px 6px;
+  border-bottom:1px solid rgba(226,232,240,.95);
   vertical-align:middle;
 }
 
-/* Spaltenbreiten: optimiert für Handy + Scroll */
-.colDay{ width:70px; }
-.colOrt{ width:220px; }     /* <-- hier ist der Trick: passt gut, weil wir kurz anzeigen */
-.colTime{ width:92px; }
-.colStd{ width:110px; }
-
-/* Inputs in Tabelle */
+/* Inputs in Tabelle kompakter (weniger "pill") */
 .entryTable select,
 .entryTable input[type="time"]{
   width:100%;
-  padding:10px 12px;
-  border-radius:999px;
+  padding:9px 10px;            /* <<< kleiner */
+  border-radius:16px;          /* <<< statt 999px */
   border:1px solid rgba(226,232,240,.95);
   font-size:14px;
   background:#fff;
 }
-
 .entryHours{
   width:100%;
-  padding:10px 12px;
-  border-radius:999px;
+  padding:9px 10px;            /* <<< kleiner */
+  border-radius:16px;          /* <<< statt 999px */
   border:1px solid rgba(226,232,240,.95);
   background:#f8fafc;
   font-weight:1000;
@@ -242,31 +187,43 @@ input, select{
 
 .right{ text-align:right; }
 
-/* Aktive Zeile */
+/* ===== Spaltenbreiten (FIX) ===== */
+.colDay{ width:68px; }       /* dd.mm */
+.colOrt{ width:170px; }      /* Kehre kompakter */
+.colTime{ width:112px; }     /* Beginn/Ende größer -> nicht gequetscht */
+.colStd{ width:98px; }       /* Stunden etwas kleiner */
+
+/* Active row highlight */
 .trActive td{
-  background: linear-gradient(90deg, rgba(79,70,229,.08), rgba(6,182,212,.06));
+  background: linear-gradient(90deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
 }
 .trActive td:first-child{
-  box-shadow: inset 4px 0 0 rgba(79,70,229,.55);
+  box-shadow: inset 4px 0 0 rgba(79,70,229,.65);
 }
 
-/* Mobile tweaks */
-@media (max-width:420px){
-  .entryTable{ min-width: 540px; }
-  .colOrt{ width:210px; }
-  .colStd{ width:105px; }
-  .entryTable thead th{ font-size:12.5px; padding:10px 7px; }
+/* Handy */
+@media (max-width: 420px){
+  .entryTable{ min-width:500px; }   /* <<< kompakter */
+  .entryTable th{ font-size:12.5px; padding:8px 5px; }
+  .entryTable td{ padding:8px 5px; }
+  .entryTable select,
+  .entryTable input[type="time"],
+  .entryHours{ font-size:13.5px; padding:8px 9px; border-radius:14px; }
+
+  .colOrt{ width:160px; }
+  .colTime{ width:108px; }
+  .colStd{ width:96px; }
 }
 
 /* =========================
-   PRINT
+   PRINT: 1 Seite (GARANTIERT)
    ========================= */
 @page{ size:A4 landscape; margin:3mm; }
 #printArea{ display:none; }
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, .tableCard, .modalBack, .pinBack{ display:none !important; }
+  .topbar, .card, .total, .tableWrap, .modalBack, .pinBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
@@ -415,14 +372,14 @@ input, select{
     <div class="cardDivider"></div>
   </div>
 
-  <!-- TABELLE -->
-  <div class="tableCard">
-    <div class="tableHeader">
+  <!-- HAUPTSEITE: EDITIER-TABELLE (SCROLLBAR) -->
+  <div class="tableWrap">
+    <div class="tableHead">
       <b>Eintragen</b>
-      <div class="hint">↔ nach rechts wischen</div>
+      <span>↔ nach rechts wischen</span>
     </div>
 
-    <div class="tableScroll" id="tableScroll">
+    <div class="tableScroll">
       <table class="entryTable">
         <thead>
           <tr>
@@ -451,7 +408,7 @@ input, select{
       </div>
       <div class="modalBody">
         <div id="previewTable"></div>
-        <div id="previewTotal" class="small" style="margin-top:10px; font-weight:1000;"></div>
+        <div id="previewTotal" class="small" style="margin-top:10px; font-weight:900;"></div>
       </div>
       <div class="modalBtns">
         <button class="primary" type="button" id="exportFromPreview">PDF Export</button>
@@ -469,7 +426,7 @@ input, select{
       <thead>
         <tr>
           <th style="width:8%;">Tag</th>
-          <th style="width:44%;">Kehre</th>
+          <th style="width:44%;">Einsatzort</th>
           <th style="width:16%;">Beginn</th>
           <th style="width:16%;">Ende</th>
           <th class="right" style="width:16%;">Stunden</th>
@@ -495,17 +452,11 @@ input, select{
    1) deinen Apps Script WebApp EXEC Link (muss mit /exec enden)
    2) deinen PIN (zum Öffnen)
    ========================================================= */
-const WEB_APP_URL = "HIER_DEIN_EXEC_LINK"; // <-- HIER EINTRAGEN
-const APP_PIN     = "1234";               // <-- HIER EINTRAGEN
+const WEB_APP_URL = "HIER_DEIN_EXEC_LINK";  // <<< HIER EINTRAGEN
+const APP_PIN     = "1234";                // <<< HIER EINTRAGEN
 
-/* Orte: VALUE bleibt lang (für Email/PDF), Anzeige kann kurz sein */
-const ORTE = [
-  { v:"Niendorf Nord",     l:"Niendorf Nord",     s:"Niendorf" },
-  { v:"Hagenbecks Tierpark", l:"Hagenbecks Tierpark", s:"H. Tierpark" },
-  { v:"Farmsen",           l:"Farmsen",           s:"Farmsen" },
-  { v:"Ochsenzoll",        l:"Ochsenzoll",        s:"Ochsenzoll" },
-];
-
+/* ====== Rest wie gehabt ====== */
+const ORTE = ["Niendorf Nord","Hagenbecks Tierpark","Farmsen","Ochsenzoll"];
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const nameEl = document.getElementById("name");
@@ -533,9 +484,6 @@ const printMetaBottomEl  = document.getElementById("printMetaBottom");
 const printBodyEl  = document.getElementById("printBody");
 const printTotalEl = document.getElementById("printTotal");
 
-/* Table scroll hint */
-const tableScroll = document.getElementById("tableScroll");
-
 /* PIN elements */
 const pinBack = document.getElementById("pinBack");
 const pinInput = document.getElementById("pinInput");
@@ -562,7 +510,7 @@ function setActiveRow(tr){
   if(tr) tr.classList.add("trActive");
 }
 
-/* Jahr Dropdown: intern 2026, Anzeige 26 */
+/* Jahr im Dropdown 2-stellig anzeigen */
 function fillMonthYear(){
   monthEl.innerHTML="";
   yearEl.innerHTML="";
@@ -577,78 +525,13 @@ function fillMonthYear(){
   const nowY=new Date().getFullYear();
   for(let i=nowY-3;i<=nowY+6;i++){
     const o=document.createElement("option");
-    o.value=String(i);                 // intern 2026
-    o.textContent=String(i).slice(-2); // Anzeige 26
+    o.value=String(i);                 // intern bleibt 2026
+    o.textContent=String(i).slice(-2);  // angezeigt wird 26
     yearEl.appendChild(o);
   }
 
   monthEl.value=String(current.getMonth()+1);
   yearEl.value=String(current.getFullYear());
-}
-
-function timeToMinutes(t){
-  if(!t) return null;
-  const m=t.match(/^(\d{2}):(\d{2})$/);
-  if(!m) return null;
-  return parseInt(m[1],10)*60 + parseInt(m[2],10);
-}
-
-function formatHoursSmart(hours){
-  if(hours == null || isNaN(hours)) return "";
-  const rounded = Math.round(hours * 100) / 100;
-  if(Number.isInteger(rounded)) return rounded + " Std";
-  return rounded.toString() + " Std";
-}
-
-function parseHoursFromField(v){
-  if(!v) return NaN;
-  const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
-  return m ? parseFloat(m[1]) : NaN;
-}
-
-function updateTotal(){
-  let sum=0;
-  document.querySelectorAll(".hours").forEach(i=>{
-    const v=parseHoursFromField(i.value);
-    if(!isNaN(v)) sum+=v;
-  });
-  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
-}
-
-function autoHours(row){
-  const s=timeToMinutes(row.querySelector(".start").value);
-  const e=timeToMinutes(row.querySelector(".end").value);
-  const out=row.querySelector(".hours");
-
-  if(s==null || e==null){
-    out.value="";
-    updateTotal();
-    return;
-  }
-  let diff=e-s;
-  if(diff<0) diff+=1440;
-  const hours = diff/60;
-  out.value = formatHoursSmart(hours);
-  updateTotal();
-}
-
-/* Ort: nach Auswahl kurz anzeigen, beim Öffnen wieder lang */
-function rememberOrigOptions(selectEl){
-  [...selectEl.options].forEach(op=>{
-    if(!op.getAttribute("data-orig")) op.setAttribute("data-orig", op.textContent);
-  });
-}
-function restoreLongOptions(selectEl){
-  [...selectEl.options].forEach(op=>{
-    const orig = op.getAttribute("data-orig");
-    if(orig) op.textContent = orig;
-  });
-}
-function applyShortSelected(selectEl){
-  const opt = selectEl.options[selectEl.selectedIndex];
-  if(!opt) return;
-  const short = opt.getAttribute("data-short");
-  if(short) opt.textContent = short;
 }
 
 function build(){
@@ -671,8 +554,8 @@ function build(){
 
       <td>
         <select class="ort">
-          <option value="" selected disabled data-short="Wählen">Wählen</option>
-          ${ORTE.map(o=>`<option value="${o.v}" data-short="${o.s}">${o.l}</option>`).join("")}
+          <option value="" selected disabled>Wählen</option>
+          ${ORTE.map(o=>`<option value="${o}">${o}</option>`).join("")}
         </select>
       </td>
 
@@ -691,22 +574,13 @@ function build(){
 
     function activate(){ setActiveRow(tr); }
 
-    /* Ort Dropdown: beim Öffnen lang, nach Auswahl kurz */
-    ort.addEventListener("mousedown", ()=>{ rememberOrigOptions(ort); restoreLongOptions(ort); });
-    ort.addEventListener("focus", ()=>{ rememberOrigOptions(ort); restoreLongOptions(ort); });
-
-    ort.addEventListener("change", ()=>{
-      activate();
-      rememberOrigOptions(ort);
-      applyShortSelected(ort);
-      markDirty(); saveState();
-    });
-
+    ort.addEventListener("change", ()=>{ activate(); markDirty(); saveState(); });
     start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
     end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
 
     start.addEventListener("focus", activate);
     end.addEventListener("focus", activate);
+    ort.addEventListener("focus", activate);
 
     hours.addEventListener("focus",(e)=>e.target.blur());
 
@@ -717,9 +591,6 @@ function build(){
   updateTotal();
 
   if(exported && !dirty) pdfBtn.disabled=true;
-
-  // Scroll hint initial
-  updateScrollHints();
 }
 
 function applyMonthAuto(){
@@ -729,6 +600,52 @@ function applyMonthAuto(){
   dirty=false;
   exported=false;
   build();
+}
+
+function timeToMinutes(t){
+  if(!t) return null;
+  const m=t.match(/^(\d{2}):(\d{2})$/);
+  if(!m) return null;
+  return parseInt(m[1],10)*60 + parseInt(m[2],10);
+}
+
+function formatHoursSmart(hours){
+  if(hours == null || isNaN(hours)) return "";
+  const rounded = Math.round(hours * 100) / 100;
+  if(Number.isInteger(rounded)) return rounded + " Std";
+  return rounded.toString() + " Std";
+}
+
+function autoHours(row){
+  const s=timeToMinutes(row.querySelector(".start").value);
+  const e=timeToMinutes(row.querySelector(".end").value);
+  const out=row.querySelector(".hours");
+
+  if(s==null || e==null){
+    out.value="";
+    updateTotal();
+    return;
+  }
+  let diff=e-s;
+  if(diff<0) diff+=1440;
+  const hours = diff/60;
+  out.value = formatHoursSmart(hours);
+  updateTotal();
+}
+
+function parseHoursFromField(v){
+  if(!v) return NaN;
+  const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : NaN;
+}
+
+function updateTotal(){
+  let sum=0;
+  document.querySelectorAll(".hours").forEach(i=>{
+    const v=parseHoursFromField(i.value);
+    if(!isNaN(v)) sum+=v;
+  });
+  sumEl.textContent = formatHoursSmart(sum) || "0 Std";
 }
 
 function getState(){
@@ -769,13 +686,8 @@ function loadState(){
     const rowEls=document.querySelectorAll("#rows tr");
     (st.rows||[]).forEach((r, idx)=>{
       if(!rowEls[idx]) return;
-
       const ortSel=rowEls[idx].querySelector(".ort");
       if(r.ort) ortSel.value=r.ort; else ortSel.selectedIndex=0;
-
-      // nach dem Setzen: wieder kurz anzeigen
-      rememberOrigOptions(ortSel);
-      applyShortSelected(ortSel);
 
       rowEls[idx].querySelector(".start").value=r.start||"";
       rowEls[idx].querySelector(".end").value=r.end||"";
@@ -845,7 +757,7 @@ function allesLoeschen(){
   build();
 }
 
-/*** Vorschau (wie gehabt) ***/
+/*** Vorschau (wie vorher) ***/
 function openPreview(){
   const name=(nameEl.value||"").trim();
   const mm=pad2(current.getMonth()+1);
@@ -860,7 +772,7 @@ function openPreview(){
       <thead>
         <tr style="background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));">
           <th style="border:1px solid #ddd; padding:8px; width:10%;">Tag</th>
-          <th style="border:1px solid #ddd; padding:8px; width:42%;">Kehre</th>
+          <th style="border:1px solid #ddd; padding:8px; width:42%;">Einsatzort</th>
           <th style="border:1px solid #ddd; padding:8px; width:16%;">Beginn</th>
           <th style="border:1px solid #ddd; padding:8px; width:16%;">Ende</th>
           <th style="border:1px solid #ddd; padding:8px; width:16%; text-align:right;">Stunden</th>
@@ -886,7 +798,7 @@ function openPreview(){
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
-        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:1000;">${hrs}</td>
+        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs}</td>
       </tr>
     `);
   });
@@ -959,19 +871,6 @@ function requirePin(){
     if(e.key==="Enter") check();
   });
 }
-
-/* Scroll hint logic */
-function updateScrollHints(){
-  const el = tableScroll;
-  if(!el) return;
-  const max = el.scrollWidth - el.clientWidth;
-  const left = el.scrollLeft;
-
-  el.classList.toggle("hasLeft", left > 2);
-  el.classList.toggle("hasRight", left < max - 2);
-}
-tableScroll.addEventListener("scroll", updateScrollHints);
-window.addEventListener("resize", updateScrollHints);
 
 /*** EVENTS ***/
 pdfBtn.addEventListener("click", exportPDF);
