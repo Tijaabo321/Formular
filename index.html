@@ -424,35 +424,37 @@ input, select{
   border-color:rgba(79,70,229,.35);
 }
 
-/* ===== NUR NEU: alles in einer Zeile + ↺ zurücksetzen ===== */
-.cellFlex{
+/* ===== NUR NEU: Zeit Auswahl in EINER Zeile (iPhone + Android) ===== */
+.timeWrap{
   display:flex;
   align-items:center;
   gap:6px;
+  flex-wrap:nowrap;
 }
-.miniBtn{
-  width:auto;
-  padding:8px 10px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  font-weight:1000;
-  background:#fff;
-  cursor:pointer;
-  line-height:1;
-}
-.presetSel{
-  width:92px;
+.timeWrap .tSel,
+.timeWrap .tOther{
+  flex:1;
+  min-width:0;
   padding:9px 10px;
   border-radius:14px;
   border:1px solid var(--border);
   font-size:14px;
   background:#fff;
 }
-.timeInput{
-  flex:1;
-  min-width:0;
+.timeWrap .tOther{ display:none; }
+.timeWrap .tReset{
+  width:40px;
+  min-width:40px;
+  padding:9px 0;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-weight:1000;
+  cursor:pointer;
+  line-height:1;
 }
-/* ================================================ */
+.timeWrap .tReset:active{ transform:scale(.98); }
+/* ================================================================ */
 </style>
 </head>
 
@@ -608,6 +610,10 @@ const ORTE = [
   { value: "Farmsen",               short: "Farmsen" },
   { value: "Ochsenzoll",            short: "Ochsenzoll" }
 ];
+
+/* NUR NEU: Preset Zeiten (für iPhone + Android) */
+const START_PRESETS = ["21:00","22:00","23:00"];
+const END_PRESETS   = ["06:00","07:00","08:00"];
 
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
@@ -817,6 +823,10 @@ function restoreFullLabel(selectEl){
   if(full) opt.textContent = full;
 }
 
+function buildTimeSelectOptions(list){
+  return list.map(t => `<option value="${t}">${t}</option>`).join("") + `<option value="__other">Andere Uhrzeit</option>`;
+}
+
 function build(){
   fillMonthYear();
 
@@ -836,40 +846,33 @@ function build(){
       <td><b>${shortDate}</b></td>
 
       <td>
-        <div class="cellFlex">
-          <select class="ort">
-            <option value="" selected disabled>Kehre wählen</option>
-            ${buildOrtOptions()}
+        <select class="ort">
+          <option value="" selected disabled>Kehre wählen</option>
+          ${buildOrtOptions()}
+        </select>
+      </td>
+
+      <td>
+        <input type="hidden" class="start" value="">
+        <div class="timeWrap">
+          <select class="tSel startSel">
+            <option value="" selected>Uhrzeit</option>
+            ${buildTimeSelectOptions(START_PRESETS)}
           </select>
-          <button class="miniBtn clearOrt" type="button" title="Zurücksetzen">↺</button>
+          <input type="time" class="tOther startOther">
+          <button type="button" class="tReset startReset">↺</button>
         </div>
       </td>
 
       <td>
-        <div class="cellFlex">
-          <select class="presetSel startPreset">
-            <option value="" selected>Start</option>
-            <option value="21:00">21:00</option>
-            <option value="22:00">22:00</option>
-            <option value="23:00">23:00</option>
-            <option value="__other__">Andere Uhrzeit</option>
+        <input type="hidden" class="end" value="">
+        <div class="timeWrap">
+          <select class="tSel endSel">
+            <option value="" selected>Uhrzeit</option>
+            ${buildTimeSelectOptions(END_PRESETS)}
           </select>
-          <input type="time" class="start timeInput" list="startTimes">
-          <button class="miniBtn clearStart" type="button" title="Zurücksetzen">↺</button>
-        </div>
-      </td>
-
-      <td>
-        <div class="cellFlex">
-          <select class="presetSel endPreset">
-            <option value="" selected>Ende</option>
-            <option value="06:00">06:00</option>
-            <option value="07:00">07:00</option>
-            <option value="08:00">08:00</option>
-            <option value="__other__">Andere Uhrzeit</option>
-          </select>
-          <input type="time" class="end timeInput" list="endTimes">
-          <button class="miniBtn clearEnd" type="button" title="Zurücksetzen">↺</button>
+          <input type="time" class="tOther endOther">
+          <button type="button" class="tReset endReset">↺</button>
         </div>
       </td>
 
@@ -879,16 +882,18 @@ function build(){
     `;
 
     const ort = tr.querySelector(".ort");
-    const start = tr.querySelector(".start");
-    const end = tr.querySelector(".end");
+
+    const startHidden = tr.querySelector(".start");
+    const startSel = tr.querySelector(".startSel");
+    const startOther = tr.querySelector(".startOther");
+    const startReset = tr.querySelector(".startReset");
+
+    const endHidden = tr.querySelector(".end");
+    const endSel = tr.querySelector(".endSel");
+    const endOther = tr.querySelector(".endOther");
+    const endReset = tr.querySelector(".endReset");
+
     const hours = tr.querySelector(".hours");
-
-    const clearOrtBtn = tr.querySelector(".clearOrt");
-    const clearStartBtn = tr.querySelector(".clearStart");
-    const clearEndBtn = tr.querySelector(".clearEnd");
-
-    const startPreset = tr.querySelector(".startPreset");
-    const endPreset = tr.querySelector(".endPreset");
 
     function activate(){ setActiveRow(tr); }
 
@@ -898,102 +903,75 @@ function build(){
       markDirty();
       saveState();
     });
-
     ort.addEventListener("focus", ()=>{ activate(); restoreFullLabel(ort); });
     ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
     ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
 
-    clearOrtBtn.addEventListener("click", ()=>{
-      activate();
-      restoreFullLabel(ort);
-      ort.selectedIndex = 0;
-      applyShortLabel(ort);
+    function setStartVal(v){
+      startHidden.value = v || "";
+      autoHours(tr);
       markDirty();
       saveState();
-    });
-
-    function syncPresetFromTime(presetEl, timeVal, list){
-      if(!timeVal){
-        presetEl.value = "";
-        return;
-      }
-      if(list.includes(timeVal)){
-        presetEl.value = timeVal;
-      }else{
-        presetEl.value = "__other__";
-      }
+    }
+    function setEndVal(v){
+      endHidden.value = v || "";
+      autoHours(tr);
+      markDirty();
+      saveState();
     }
 
-    startPreset.addEventListener("change", ()=>{
+    startSel.addEventListener("change", ()=>{
       activate();
-      const v = startPreset.value;
-      if(v && v !== "__other__"){
-        start.value = v;
-        start.dispatchEvent(new Event("change", { bubbles:true }));
-      }else if(v === "__other__"){
-        start.focus();
-        if(start.showPicker) { try{ start.showPicker(); }catch(e){} }
+      const v = (startSel.value || "").trim();
+      if(v === "__other"){
+        startOther.style.display = "block";
+        startOther.value = startHidden.value || "";
+        setTimeout(()=>{ try{ startOther.focus(); }catch(e){} }, 0);
       }else{
-        start.value = "";
-        start.dispatchEvent(new Event("change", { bubbles:true }));
+        startOther.style.display = "none";
+        setStartVal(v);
       }
-      markDirty();
-      saveState();
+    });
+    startOther.addEventListener("change", ()=>{
+      activate();
+      setStartVal(startOther.value || "");
+    });
+    startReset.addEventListener("click", ()=>{
+      activate();
+      startSel.value = "";
+      startOther.style.display = "none";
+      startOther.value = "";
+      setStartVal("");
     });
 
-    endPreset.addEventListener("change", ()=>{
+    endSel.addEventListener("change", ()=>{
       activate();
-      const v = endPreset.value;
-      if(v && v !== "__other__"){
-        end.value = v;
-        end.dispatchEvent(new Event("change", { bubbles:true }));
-      }else if(v === "__other__"){
-        end.focus();
-        if(end.showPicker) { try{ end.showPicker(); }catch(e){} }
+      const v = (endSel.value || "").trim();
+      if(v === "__other"){
+        endOther.style.display = "block";
+        endOther.value = endHidden.value || "";
+        setTimeout(()=>{ try{ endOther.focus(); }catch(e){} }, 0);
       }else{
-        end.value = "";
-        end.dispatchEvent(new Event("change", { bubbles:true }));
+        endOther.style.display = "none";
+        setEndVal(v);
       }
-      markDirty();
-      saveState();
     });
-
-    start.addEventListener("change", ()=>{
+    endOther.addEventListener("change", ()=>{
       activate();
-      autoHours(tr);
-      syncPresetFromTime(startPreset, start.value, ["21:00","22:00","23:00"]);
-      markDirty();
-      saveState();
+      setEndVal(endOther.value || "");
     });
-
-    end.addEventListener("change", ()=>{
+    endReset.addEventListener("click", ()=>{
       activate();
-      autoHours(tr);
-      syncPresetFromTime(endPreset, end.value, ["06:00","07:00","08:00"]);
-      markDirty();
-      saveState();
+      endSel.value = "";
+      endOther.style.display = "none";
+      endOther.value = "";
+      setEndVal("");
     });
 
-    start.addEventListener("focus", activate);
-    end.addEventListener("focus", activate);
-
-    clearStartBtn.addEventListener("click", ()=>{
-      activate();
-      start.value = "";
-      startPreset.value = "";
-      autoHours(tr);
-      markDirty();
-      saveState();
-    });
-
-    clearEndBtn.addEventListener("click", ()=>{
-      activate();
-      end.value = "";
-      endPreset.value = "";
-      autoHours(tr);
-      markDirty();
-      saveState();
-    });
+    startSel.addEventListener("focus", activate);
+    endSel.addEventListener("focus", activate);
+    startOther.addEventListener("focus", activate);
+    endOther.addEventListener("focus", activate);
 
     hours.addEventListener("focus",(e)=>e.target.blur());
 
@@ -1004,27 +982,6 @@ function build(){
 
   document.querySelectorAll(".ort").forEach(sel=>{
     if(sel.value) applyShortLabel(sel);
-  });
-
-  document.querySelectorAll("#rows tr").forEach(tr=>{
-    const start = tr.querySelector(".start");
-    const end = tr.querySelector(".end");
-    const startPreset = tr.querySelector(".startPreset");
-    const endPreset = tr.querySelector(".endPreset");
-
-    const sv = (start.value || "").trim();
-    const ev = (end.value || "").trim();
-
-    if(startPreset) {
-      if(!sv) startPreset.value = "";
-      else if(["21:00","22:00","23:00"].includes(sv)) startPreset.value = sv;
-      else startPreset.value = "__other__";
-    }
-    if(endPreset) {
-      if(!ev) endPreset.value = "";
-      else if(["06:00","07:00","08:00"].includes(ev)) endPreset.value = ev;
-      else endPreset.value = "__other__";
-    }
   });
 
   updateTotal();
@@ -1133,8 +1090,41 @@ function loadState(){
       const ortSel=rowEls[idx].querySelector(".ort");
       if(r.ort) ortSel.value=r.ort; else ortSel.selectedIndex=0;
 
-      rowEls[idx].querySelector(".start").value=r.start||"";
-      rowEls[idx].querySelector(".end").value=r.end||"";
+      const sH = rowEls[idx].querySelector(".start");
+      const eH = rowEls[idx].querySelector(".end");
+      sH.value = r.start||"";
+      eH.value = r.end||"";
+
+      const startSel = rowEls[idx].querySelector(".startSel");
+      const startOther = rowEls[idx].querySelector(".startOther");
+      if(START_PRESETS.includes(sH.value)){
+        startSel.value = sH.value;
+        startOther.style.display = "none";
+      }else if(sH.value){
+        startSel.value = "__other";
+        startOther.style.display = "block";
+        startOther.value = sH.value;
+      }else{
+        startSel.value = "";
+        startOther.style.display = "none";
+        startOther.value = "";
+      }
+
+      const endSel = rowEls[idx].querySelector(".endSel");
+      const endOther = rowEls[idx].querySelector(".endOther");
+      if(END_PRESETS.includes(eH.value)){
+        endSel.value = eH.value;
+        endOther.style.display = "none";
+      }else if(eH.value){
+        endSel.value = "__other";
+        endOther.style.display = "block";
+        endOther.value = eH.value;
+      }else{
+        endSel.value = "";
+        endOther.style.display = "none";
+        endOther.value = "";
+      }
+
       rowEls[idx].querySelector(".hours").value=r.hours||"";
     });
 
