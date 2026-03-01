@@ -178,8 +178,7 @@ input, select{
   border-bottom: 1px solid rgba(109,40,217,.06);
 }
 
-.entryTable select,
-.entryTable input[type="time"]{
+.entryTable select{
   width:100%;
   padding:9px 10px;
   border-radius:14px;
@@ -188,12 +187,40 @@ input, select{
   background:#fff;
 }
 
-.entryTable input[type="time"]{ color: #0f172a; }
-.entryTable input[type="time"]::-webkit-datetime-edit{ color:#0f172a; }
-.entryTable input[type="time"]::-webkit-datetime-edit-text,
-.entryTable input[type="time"]::-webkit-datetime-edit-hour-field,
-.entryTable input[type="time"]::-webkit-datetime-edit-minute-field{ color:#0f172a; }
-.entryTable input[type="time"]::-webkit-calendar-picker-indicator{ opacity:1; }
+/* ===== EIN FELD + RESET IM FELD ===== */
+.timeField{
+  position:relative;
+  width:100%;
+}
+.timeField input{
+  width:100%;
+  padding:9px 38px 9px 10px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-size:14px;
+  background:#fff;
+  color:#0f172a;
+}
+.timeField input::placeholder{ color:#0f172a; opacity:.55; }
+.timeReset{
+  position:absolute;
+  top:50%;
+  right:8px;
+  transform:translateY(-50%);
+  width:28px;
+  height:28px;
+  border-radius:10px;
+  border:1px solid rgba(226,232,240,.95);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+  font-weight:900;
+}
+.timeReset:active{ transform:translateY(-50%) scale(.98); }
+/* =================================== */
 
 .entryHours{
   width:100%;
@@ -224,7 +251,7 @@ input, select{
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack{ display:none !important; }
+  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack, .timeSheetBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
@@ -423,22 +450,80 @@ input, select{
   color:#fff;
   border-color:rgba(79,70,229,.35);
 }
+
+/* ===== BOTTOM SHEET (A) ===== */
+.timeSheetBack{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  z-index:400;
+  padding:0;
+}
+.timeSheet{
+  position:absolute;
+  left:0; right:0; bottom:0;
+  background:#fff;
+  border-radius:18px 18px 0 0;
+  border-top:1px solid var(--border);
+  box-shadow:0 -18px 40px rgba(0,0,0,.18);
+  padding:12px;
+  max-height:70vh;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.timeSheetTitle{
+  font-weight:1000;
+  font-size:18px;
+  margin:4px 2px 10px;
+}
+.timeOpt{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 10px;
+  border-top:1px solid rgba(226,232,240,.85);
+  font-weight:900;
+  cursor:pointer;
+}
+.timeOpt:first-of-type{ border-top:none; }
+.timeOpt .radio{
+  width:18px; height:18px;
+  border-radius:999px;
+  border:2px solid rgba(15,23,42,.25);
+  display:inline-block;
+}
+.timeOpt.active .radio{
+  border-color: rgba(79,70,229,.95);
+  box-shadow: inset 0 0 0 4px rgba(79,70,229,.95);
+}
+.timeSheetFooter{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(226,232,240,.85);
+}
+.timeSheetBtn{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-weight:1000;
+  font-size:15px;
+  cursor:pointer;
+  background:#fff;
+}
+.timeSheetBtn.primary{
+  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
+  color:#fff;
+  border-color:rgba(79,70,229,.35);
+}
+/* =========================== */
 </style>
 </head>
 
 <body>
 
-<datalist id="startTimes">
-  <option value="21:00"></option>
-  <option value="22:00"></option>
-  <option value="23:00"></option>
-</datalist>
-<datalist id="endTimes">
-  <option value="06:00"></option>
-  <option value="07:00"></option>
-  <option value="08:00"></option>
-</datalist>
-
+<!-- PIN Overlay -->
 <div class="pinBack" id="pinBack">
   <div class="pinCard">
     <div class="pinTitle">PIN erforderlich</div>
@@ -461,6 +546,19 @@ input, select{
     </div>
   </div>
 </div>
+
+<!-- ===== BOTTOM SHEET (A) ===== -->
+<div class="timeSheetBack" id="timeSheetBack">
+  <div class="timeSheet" role="dialog" aria-modal="true" aria-labelledby="timeSheetTitle">
+    <div class="timeSheetTitle" id="timeSheetTitle">Uhrzeit</div>
+    <div id="timeSheetList"></div>
+    <div class="timeSheetFooter">
+      <button class="timeSheetBtn" type="button" id="timeSheetClose">Abbrechen</button>
+    </div>
+  </div>
+</div>
+<input id="nativeTime" type="time" style="position:fixed; left:-9999px; width:1px; height:1px; opacity:0;" />
+<!-- =========================== -->
 
 <div class="wrap">
 
@@ -579,6 +677,9 @@ const ORTE = [
   { value: "Ochsenzoll",            short: "Ochsenzoll" }
 ];
 
+const START_CHOICES = ["21:00","22:00","23:00"];
+const END_CHOICES   = ["06:00","07:00","08:00"];
+
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
 const yearEl  = document.getElementById("year");
@@ -617,6 +718,12 @@ const dlgMsgEl = document.getElementById("dlgMsg");
 const dlgBtnsEl = document.getElementById("dlgBtns");
 const dlgOkBtn = document.getElementById("dlgOk");
 const dlgCancelBtn = document.getElementById("dlgCancel");
+
+const timeSheetBack = document.getElementById("timeSheetBack");
+const timeSheetTitle = document.getElementById("timeSheetTitle");
+const timeSheetList = document.getElementById("timeSheetList");
+const timeSheetClose = document.getElementById("timeSheetClose");
+const nativeTime = document.getElementById("nativeTime");
 
 let current = new Date(); current.setDate(1);
 let dirty = false;
@@ -787,6 +894,77 @@ function restoreFullLabel(selectEl){
   if(full) opt.textContent = full;
 }
 
+let sheetTargetInput = null;
+let sheetTargetRow = null;
+let sheetMode = "start";
+
+function closeTimeSheet(){
+  timeSheetBack.style.display = "none";
+  timeSheetList.innerHTML = "";
+  sheetTargetInput = null;
+  sheetTargetRow = null;
+  sheetMode = "start";
+}
+
+function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode }){
+  sheetTargetInput = targetInput;
+  sheetTargetRow = targetRow;
+  sheetMode = mode;
+
+  timeSheetTitle.textContent = title;
+  timeSheetList.innerHTML = "";
+
+  const addOpt = (label, value, active)=>{
+    const div = document.createElement("div");
+    div.className = "timeOpt" + (active ? " active" : "");
+    div.innerHTML = `<span class="radio"></span><span>${label}</span>`;
+    div.addEventListener("click", ()=>{
+      if(value === "__OTHER__"){
+        nativeTime.value = "";
+        nativeTime.onchange = null;
+        nativeTime.onchange = ()=>{
+          const v = (nativeTime.value || "").trim();
+          if(v){
+            sheetTargetInput.value = v;
+            autoHours(sheetTargetRow);
+            markDirty();
+            saveState();
+          }
+          closeTimeSheet();
+        };
+        nativeTime.click();
+        return;
+      }
+
+      if(value === "__CLEAR__"){
+        sheetTargetInput.value = "";
+        autoHours(sheetTargetRow);
+        markDirty();
+        saveState();
+        closeTimeSheet();
+        return;
+      }
+
+      sheetTargetInput.value = value;
+      autoHours(sheetTargetRow);
+      markDirty();
+      saveState();
+      closeTimeSheet();
+    });
+    timeSheetList.appendChild(div);
+  };
+
+  addOpt("Uhrzeit", "__NOOP__", true);
+
+  list.forEach(t=>{
+    addOpt(t, t, currentValue === t);
+  });
+
+  addOpt("Andere Uhrzeit", "__OTHER__", false);
+
+  timeSheetBack.style.display = "block";
+}
+
 function build(){
   fillMonthYear();
 
@@ -812,8 +990,19 @@ function build(){
         </select>
       </td>
 
-      <td><input type="time" class="start" list="startTimes"></td>
-      <td><input type="time" class="end" list="endTimes"></td>
+      <td>
+        <div class="timeField">
+          <input type="text" class="start" placeholder="Uhr" readonly>
+          <span class="timeReset startReset" title="Zurücksetzen">↺</span>
+        </div>
+      </td>
+
+      <td>
+        <div class="timeField">
+          <input type="text" class="end" placeholder="Uhr" readonly>
+          <span class="timeReset endReset" title="Zurücksetzen">↺</span>
+        </div>
+      </td>
 
       <td>
         <input type="text" class="hours entryHours" placeholder="0" readonly>
@@ -824,6 +1013,8 @@ function build(){
     const start = tr.querySelector(".start");
     const end = tr.querySelector(".end");
     const hours = tr.querySelector(".hours");
+    const startReset = tr.querySelector(".startReset");
+    const endReset = tr.querySelector(".endReset");
 
     function activate(){ setActiveRow(tr); }
 
@@ -838,12 +1029,52 @@ function build(){
     ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
     ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
 
-    start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
-    end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
+    start.addEventListener("click", ()=>{
+      activate();
+      openTimeSheet({
+        title: "Uhrzeit festlegen",
+        list: START_CHOICES,
+        currentValue: (start.value || "").trim(),
+        targetInput: start,
+        targetRow: tr,
+        mode: "start"
+      });
+    });
+
+    end.addEventListener("click", ()=>{
+      activate();
+      openTimeSheet({
+        title: "Uhrzeit festlegen",
+        list: END_CHOICES,
+        currentValue: (end.value || "").trim(),
+        targetInput: end,
+        targetRow: tr,
+        mode: "end"
+      });
+    });
+
+    startReset.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      activate();
+      start.value = "";
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
+
+    endReset.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      activate();
+      end.value = "";
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
 
     start.addEventListener("focus", activate);
     end.addEventListener("focus", activate);
-
     hours.addEventListener("focus",(e)=>e.target.blur());
 
     rowsEl.appendChild(tr);
@@ -1179,6 +1410,9 @@ nameEl.addEventListener("input", ()=>{
   saveState();
 });
 
+timeSheetClose.addEventListener("click", closeTimeSheet);
+timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) closeTimeSheet(); });
+
 (function init(){
   if(PIN_BG_FILE && PIN_BG_FILE.trim() !== ""){
     document.documentElement.style.setProperty("--pinBg", `url("${PIN_BG_FILE}")`);
@@ -1193,5 +1427,3 @@ nameEl.addEventListener("input", ()=>{
 </script>
 </body>
 </html>
-
-
