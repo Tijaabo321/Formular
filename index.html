@@ -194,7 +194,7 @@ input, select{
 }
 .timeField input{
   width:100%;
-  padding:9px 38px 9px 10px;
+  padding:9px 10px;
   border-radius:14px;
   border:1px solid var(--border);
   font-size:14px;
@@ -202,24 +202,6 @@ input, select{
   color:#0f172a;
 }
 .timeField input::placeholder{ color:#0f172a; opacity:.55; }
-.timeReset{
-  position:absolute;
-  top:50%;
-  right:8px;
-  transform:translateY(-50%);
-  width:28px;
-  height:28px;
-  border-radius:10px;
-  border:1px solid rgba(226,232,240,.95);
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  user-select:none;
-  font-weight:900;
-}
-.timeReset:active{ transform:translateY(-50%) scale(.98); }
 /* =================================== */
 
 .entryHours{
@@ -516,6 +498,17 @@ input, select{
   background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
   color:#fff;
   border-color:rgba(79,70,229,.35);
+}
+.timeOpt.dangerOpt{
+  color: var(--danger);
+  font-weight:1000;
+}
+.timeOpt.dangerOpt .radio{
+  border-color: rgba(239,68,68,.35);
+}
+.timeOpt.dangerOpt.active .radio{
+  border-color: rgba(239,68,68,.9);
+  box-shadow: inset 0 0 0 4px rgba(239,68,68,.9);
 }
 /* =========================== */
 </style>
@@ -914,9 +907,9 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
   timeSheetTitle.textContent = title;
   timeSheetList.innerHTML = "";
 
-  const addOpt = (label, value, active)=>{
+  const addOpt = (label, value, active, danger)=>{
     const div = document.createElement("div");
-    div.className = "timeOpt" + (active ? " active" : "");
+    div.className = "timeOpt" + (active ? " active" : "") + (danger ? " dangerOpt" : "");
     div.innerHTML = `<span class="radio"></span><span>${label}</span>`;
     div.addEventListener("click", ()=>{
       if(value === "__OTHER__"){
@@ -954,13 +947,15 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
     timeSheetList.appendChild(div);
   };
 
-  addOpt("Uhrzeit", "__NOOP__", true);
+  addOpt("Uhrzeit", "__NOOP__", true, false);
 
   list.forEach(t=>{
-    addOpt(t, t, currentValue === t);
+    addOpt(t, t, currentValue === t, false);
   });
 
-  addOpt("Andere Uhrzeit", "__OTHER__", false);
+  addOpt("Andere Uhrzeit", "__OTHER__", false, false);
+
+  addOpt("Zeiten löschen", "__CLEAR__", false, true);
 
   timeSheetBack.style.display = "block";
 }
@@ -987,20 +982,19 @@ function build(){
         <select class="ort">
           <option value="" selected disabled>Kehre wählen</option>
           ${buildOrtOptions()}
+          <option value="__CLEAR_ORT__" class="dangerOpt">Kehre löschen</option>
         </select>
       </td>
 
       <td>
         <div class="timeField">
           <input type="text" class="start" placeholder="Uhr" readonly>
-          <span class="timeReset startReset" title="Zurücksetzen">↺</span>
         </div>
       </td>
 
       <td>
         <div class="timeField">
           <input type="text" class="end" placeholder="Uhr" readonly>
-          <span class="timeReset endReset" title="Zurücksetzen">↺</span>
         </div>
       </td>
 
@@ -1013,13 +1007,19 @@ function build(){
     const start = tr.querySelector(".start");
     const end = tr.querySelector(".end");
     const hours = tr.querySelector(".hours");
-    const startReset = tr.querySelector(".startReset");
-    const endReset = tr.querySelector(".endReset");
 
     function activate(){ setActiveRow(tr); }
 
     ort.addEventListener("change", ()=>{
       activate();
+
+      if(ort.value === "__CLEAR_ORT__"){
+        ort.selectedIndex = 0;
+        markDirty();
+        saveState();
+        return;
+      }
+
       applyShortLabel(ort);
       markDirty();
       saveState();
@@ -1051,26 +1051,6 @@ function build(){
         targetRow: tr,
         mode: "end"
       });
-    });
-
-    startReset.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      activate();
-      start.value = "";
-      autoHours(tr);
-      markDirty();
-      saveState();
-    });
-
-    endReset.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      activate();
-      end.value = "";
-      autoHours(tr);
-      markDirty();
-      saveState();
     });
 
     start.addEventListener("focus", activate);
@@ -1190,7 +1170,8 @@ function loadState(){
       if(!rowEls[idx]) return;
 
       const ortSel=rowEls[idx].querySelector(".ort");
-      if(r.ort) ortSel.value=r.ort; else ortSel.selectedIndex=0;
+      if(r.ort && r.ort !== "__CLEAR_ORT__") ortSel.value=r.ort;
+      else ortSel.selectedIndex=0;
 
       rowEls[idx].querySelector(".start").value=r.start||"";
       rowEls[idx].querySelector(".end").value=r.end||"";
@@ -1231,7 +1212,7 @@ function buildPrintTable(){
 
     tr.innerHTML=`
       <td>${day}</td>
-      <td>${ort}</td>
+      <td>${ort === "__CLEAR_ORT__" ? "" : ort}</td>
       <td>${start}</td>
       <td>${end}</td>
       <td class="right">${hrsTxt}</td>
@@ -1298,7 +1279,7 @@ function openPreview(){
     parts.push(`
       <tr style="${empty ? "background:#f3f4f6;" : ""}">
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${day}</td>
-        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort}</td>
+        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort === "__CLEAR_ORT__" ? "" : ort}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
         <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
         <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs}</td>
