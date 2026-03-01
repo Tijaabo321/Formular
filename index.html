@@ -947,8 +947,7 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
     timeSheetList.appendChild(div);
   };
 
-  addOpt("Uhrzeit", "__NOOP__", true, false);
-
+ 
   list.forEach(t=>{
     addOpt(t, t, currentValue === t, false);
   });
@@ -1408,4 +1407,5 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 </script>
 </body>
 </html>
+
 
