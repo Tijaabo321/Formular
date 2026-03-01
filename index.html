@@ -224,7 +224,7 @@ input, select{
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack, .timeBack{ display:none !important; }
+  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
@@ -424,55 +424,35 @@ input, select{
   border-color:rgba(79,70,229,.35);
 }
 
-/* ===== NUR NEU: iPhone Zeit-Auswahl (Bottom Sheet) ===== */
-.timeBack{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,.45);
-  z-index:400;
-  padding:14px;
+/* ===== NUR NEU: alles in einer Zeile + ↺ zurücksetzen ===== */
+.cellFlex{
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
-.timeSheet{
-  position:absolute;
-  left:14px;
-  right:14px;
-  bottom:14px;
-  background:#fff;
-  border-radius:18px;
+.miniBtn{
+  width:auto;
+  padding:8px 10px;
+  border-radius:12px;
   border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
-.timeSheetTop{
-  padding:12px 14px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
-  border-bottom:1px solid var(--border);
   font-weight:1000;
-}
-.timeList{
-  max-height:42vh;
-  overflow:auto;
-  -webkit-overflow-scrolling:touch;
-}
-.timeItem{
-  padding:14px;
-  border-bottom:1px solid var(--border);
-  font-weight:900;
-  color:#0f172a;
   background:#fff;
   cursor:pointer;
+  line-height:1;
 }
-.timeItem.muted{ color:var(--muted); font-weight:800; }
-.timeItem:last-child{ border-bottom:none; }
-.timeCancel{
-  padding:14px;
-  border-top:1px solid var(--border);
-  font-weight:1000;
-  text-align:center;
-  cursor:pointer;
+.presetSel{
+  width:92px;
+  padding:9px 10px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-size:14px;
+  background:#fff;
 }
-/* =============================================== */
+.timeInput{
+  flex:1;
+  min-width:0;
+}
+/* ================================================ */
 </style>
 </head>
 
@@ -511,16 +491,6 @@ input, select{
     </div>
   </div>
 </div>
-
-<!-- ===== NUR NEU: iPhone Zeit-Auswahl (Bottom Sheet) ===== -->
-<div class="timeBack" id="timeBack">
-  <div class="timeSheet" role="dialog" aria-modal="true">
-    <div class="timeSheetTop" id="timeTitle">Uhrzeit festlegen</div>
-    <div class="timeList" id="timeList"></div>
-    <div class="timeCancel" id="timeCancel">Abbrechen</div>
-  </div>
-</div>
-<!-- ======================================================= -->
 
 <div class="wrap">
 
@@ -678,17 +648,6 @@ const dlgBtnsEl = document.getElementById("dlgBtns");
 const dlgOkBtn = document.getElementById("dlgOk");
 const dlgCancelBtn = document.getElementById("dlgCancel");
 
-/* ===== NUR NEU: Time Sheet Elemente ===== */
-const timeBack = document.getElementById("timeBack");
-const timeTitle = document.getElementById("timeTitle");
-const timeList = document.getElementById("timeList");
-const timeCancel = document.getElementById("timeCancel");
-
-const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-let activeTimeInput = null;
-/* ======================================= */
-
 let current = new Date(); current.setDate(1);
 let dirty = false;
 let exported = false;
@@ -816,71 +775,6 @@ function validateRowsBeforeSend(){
   return { ok:true };
 }
 
-/* ===== NUR NEU: iPhone Time Sheet Logic ===== */
-function closeTimeSheet(){
-  timeBack.style.display = "none";
-  timeList.innerHTML = "";
-  activeTimeInput = null;
-}
-
-function openTimeSheetForInput(inputEl, labelText, datalistId){
-  activeTimeInput = inputEl;
-  timeTitle.textContent = labelText || "Uhrzeit festlegen";
-  timeList.innerHTML = "";
-
-  const dl = document.getElementById(datalistId);
-  const opts = dl ? Array.from(dl.querySelectorAll("option")).map(o => (o.value||"").trim()).filter(Boolean) : [];
-
-  opts.forEach(v=>{
-    const div = document.createElement("div");
-    div.className = "timeItem";
-    div.textContent = v;
-    div.onclick = ()=>{
-      activeTimeInput.value = v;
-      activeTimeInput.readOnly = true;
-      closeTimeSheet();
-
-      const tr = activeTimeInput.closest("tr");
-      if(tr){
-        autoHours(tr);
-        markDirty();
-        saveState();
-      }
-    };
-    timeList.appendChild(div);
-  });
-
-  const other = document.createElement("div");
-  other.className = "timeItem muted";
-  other.textContent = "Sonstiges";
-  other.onclick = ()=>{
-    if(!activeTimeInput) return;
-    closeTimeSheet();
-    activeTimeInput.readOnly = false;
-    activeTimeInput.focus();
-
-    const onBlur = ()=>{
-      activeTimeInput.readOnly = true;
-      activeTimeInput.removeEventListener("blur", onBlur);
-
-      const tr = activeTimeInput.closest("tr");
-      if(tr){
-        autoHours(tr);
-        markDirty();
-        saveState();
-      }
-    };
-    activeTimeInput.addEventListener("blur", onBlur);
-  };
-  timeList.appendChild(other);
-
-  timeBack.style.display = "block";
-}
-
-timeCancel.addEventListener("click", closeTimeSheet);
-timeBack.addEventListener("click", (e)=>{ if(e.target === timeBack) closeTimeSheet(); });
-/* ========================================== */
-
 function fillMonthYear(){
   monthEl.innerHTML="";
   yearEl.innerHTML="";
@@ -942,14 +836,42 @@ function build(){
       <td><b>${shortDate}</b></td>
 
       <td>
-        <select class="ort">
-          <option value="" selected disabled>Kehre wählen</option>
-          ${buildOrtOptions()}
-        </select>
+        <div class="cellFlex">
+          <select class="ort">
+            <option value="" selected disabled>Kehre wählen</option>
+            ${buildOrtOptions()}
+          </select>
+          <button class="miniBtn clearOrt" type="button" title="Zurücksetzen">↺</button>
+        </div>
       </td>
 
-      <td><input ${IS_IOS ? 'type="text" inputmode="numeric" readonly' : 'type="time"'} class="start" ${IS_IOS ? '' : 'list="startTimes"'}></td>
-      <td><input ${IS_IOS ? 'type="text" inputmode="numeric" readonly' : 'type="time"'} class="end" ${IS_IOS ? '' : 'list="endTimes"'}></td>
+      <td>
+        <div class="cellFlex">
+          <select class="presetSel startPreset">
+            <option value="" selected>Start</option>
+            <option value="21:00">21:00</option>
+            <option value="22:00">22:00</option>
+            <option value="23:00">23:00</option>
+            <option value="__other__">Andere Uhrzeit</option>
+          </select>
+          <input type="time" class="start timeInput" list="startTimes">
+          <button class="miniBtn clearStart" type="button" title="Zurücksetzen">↺</button>
+        </div>
+      </td>
+
+      <td>
+        <div class="cellFlex">
+          <select class="presetSel endPreset">
+            <option value="" selected>Ende</option>
+            <option value="06:00">06:00</option>
+            <option value="07:00">07:00</option>
+            <option value="08:00">08:00</option>
+            <option value="__other__">Andere Uhrzeit</option>
+          </select>
+          <input type="time" class="end timeInput" list="endTimes">
+          <button class="miniBtn clearEnd" type="button" title="Zurücksetzen">↺</button>
+        </div>
+      </td>
 
       <td>
         <input type="text" class="hours entryHours" placeholder="0" readonly>
@@ -961,16 +883,12 @@ function build(){
     const end = tr.querySelector(".end");
     const hours = tr.querySelector(".hours");
 
-    if(IS_IOS){
-      start.placeholder = "--:--";
-      end.placeholder = "--:--";
+    const clearOrtBtn = tr.querySelector(".clearOrt");
+    const clearStartBtn = tr.querySelector(".clearStart");
+    const clearEndBtn = tr.querySelector(".clearEnd");
 
-      start.addEventListener("click", ()=> openTimeSheetForInput(start, "Beginn festlegen", "startTimes"));
-      end.addEventListener("click", ()=> openTimeSheetForInput(end, "Ende festlegen", "endTimes"));
-
-      start.addEventListener("focus", ()=> start.blur());
-      end.addEventListener("focus", ()=> end.blur());
-    }
+    const startPreset = tr.querySelector(".startPreset");
+    const endPreset = tr.querySelector(".endPreset");
 
     function activate(){ setActiveRow(tr); }
 
@@ -985,11 +903,97 @@ function build(){
     ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
     ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
 
-    start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
-    end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
+    clearOrtBtn.addEventListener("click", ()=>{
+      activate();
+      restoreFullLabel(ort);
+      ort.selectedIndex = 0;
+      applyShortLabel(ort);
+      markDirty();
+      saveState();
+    });
+
+    function syncPresetFromTime(presetEl, timeVal, list){
+      if(!timeVal){
+        presetEl.value = "";
+        return;
+      }
+      if(list.includes(timeVal)){
+        presetEl.value = timeVal;
+      }else{
+        presetEl.value = "__other__";
+      }
+    }
+
+    startPreset.addEventListener("change", ()=>{
+      activate();
+      const v = startPreset.value;
+      if(v && v !== "__other__"){
+        start.value = v;
+        start.dispatchEvent(new Event("change", { bubbles:true }));
+      }else if(v === "__other__"){
+        start.focus();
+        if(start.showPicker) { try{ start.showPicker(); }catch(e){} }
+      }else{
+        start.value = "";
+        start.dispatchEvent(new Event("change", { bubbles:true }));
+      }
+      markDirty();
+      saveState();
+    });
+
+    endPreset.addEventListener("change", ()=>{
+      activate();
+      const v = endPreset.value;
+      if(v && v !== "__other__"){
+        end.value = v;
+        end.dispatchEvent(new Event("change", { bubbles:true }));
+      }else if(v === "__other__"){
+        end.focus();
+        if(end.showPicker) { try{ end.showPicker(); }catch(e){} }
+      }else{
+        end.value = "";
+        end.dispatchEvent(new Event("change", { bubbles:true }));
+      }
+      markDirty();
+      saveState();
+    });
+
+    start.addEventListener("change", ()=>{
+      activate();
+      autoHours(tr);
+      syncPresetFromTime(startPreset, start.value, ["21:00","22:00","23:00"]);
+      markDirty();
+      saveState();
+    });
+
+    end.addEventListener("change", ()=>{
+      activate();
+      autoHours(tr);
+      syncPresetFromTime(endPreset, end.value, ["06:00","07:00","08:00"]);
+      markDirty();
+      saveState();
+    });
 
     start.addEventListener("focus", activate);
     end.addEventListener("focus", activate);
+
+    clearStartBtn.addEventListener("click", ()=>{
+      activate();
+      start.value = "";
+      startPreset.value = "";
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
+
+    clearEndBtn.addEventListener("click", ()=>{
+      activate();
+      end.value = "";
+      endPreset.value = "";
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
 
     hours.addEventListener("focus",(e)=>e.target.blur());
 
@@ -1000,6 +1004,27 @@ function build(){
 
   document.querySelectorAll(".ort").forEach(sel=>{
     if(sel.value) applyShortLabel(sel);
+  });
+
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const start = tr.querySelector(".start");
+    const end = tr.querySelector(".end");
+    const startPreset = tr.querySelector(".startPreset");
+    const endPreset = tr.querySelector(".endPreset");
+
+    const sv = (start.value || "").trim();
+    const ev = (end.value || "").trim();
+
+    if(startPreset) {
+      if(!sv) startPreset.value = "";
+      else if(["21:00","22:00","23:00"].includes(sv)) startPreset.value = sv;
+      else startPreset.value = "__other__";
+    }
+    if(endPreset) {
+      if(!ev) endPreset.value = "";
+      else if(["06:00","07:00","08:00"].includes(ev)) endPreset.value = ev;
+      else endPreset.value = "__other__";
+    }
   });
 
   updateTotal();
@@ -1340,4 +1365,3 @@ nameEl.addEventListener("input", ()=>{
 </script>
 </body>
 </html>
-
