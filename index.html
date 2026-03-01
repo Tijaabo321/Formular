@@ -150,7 +150,7 @@ input, select{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
-  min-width: 620px;
+  min-width: 666px;
 }
 .entryTable th{
   background: #ede9fe;
@@ -188,7 +188,7 @@ input, select{
   background:#fff;
 }
 
-.entryTable input[type="time"]{ color: #0f172a; }
+.entryTable input[type="time"]{ color: #0f172a; min-width:0; }
 .entryTable input[type="time"]::-webkit-datetime-edit{ color:#0f172a; }
 .entryTable input[type="time"]::-webkit-datetime-edit-text,
 .entryTable input[type="time"]::-webkit-datetime-edit-hour-field,
@@ -211,6 +211,7 @@ input, select{
 .colKehre{ width:190px; }
 .colTime{ width:120px; }
 .colStd{ width:120px; }
+.colAct{ width:46px; }
 
 .trActive td{
   background: linear-gradient(90deg, rgba(79,70,229,.08), rgba(6,182,212,.06));
@@ -423,6 +424,43 @@ input, select{
   color:#fff;
   border-color:rgba(79,70,229,.35);
 }
+
+/* ===== NEU: Quick-Time (für iPhone) ===== */
+.timeCell{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.timeQuick{
+  width:44px;
+  padding:9px 6px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-size:14px;
+  font-weight:1000;
+  background:#fff;
+  color:#0f172a;
+  text-align:center;
+}
+.timeQuick option{ color:#0f172a; }
+/* ======================================= */
+
+/* ===== NEU: Zeilen-Reset Button ===== */
+.rowClear{
+  width:38px;
+  height:38px;
+  padding:0;
+  border-radius:14px;
+  border:1px solid rgba(239,68,68,.25);
+  background:#fff;
+  color:#ef4444;
+  font-weight:1000;
+  font-size:16px;
+  line-height:1;
+  cursor:pointer;
+}
+.rowClear:active{ transform: translateY(1px); }
+/* ==================================== */
 </style>
 </head>
 
@@ -509,6 +547,7 @@ input, select{
             <th class="colTime">BEGINN</th>
             <th class="colTime">ENDE</th>
             <th class="colStd">STUNDEN</th>
+            <th class="colAct"></th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -566,7 +605,7 @@ input, select{
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
+const WEB_APP_URL = "leerlassen";
 const APP_PIN     = "8558";
 const PIN_BG_FILE = "nr3.jpg";
 
@@ -578,6 +617,9 @@ const ORTE = [
   { value: "Farmsen",               short: "Farmsen" },
   { value: "Ochsenzoll",            short: "Ochsenzoll" }
 ];
+
+const QUICK_START_TIMES = ["21:00","22:00","23:00"];
+const QUICK_END_TIMES   = ["06:00","07:00","08:00"];
 
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
@@ -787,6 +829,40 @@ function restoreFullLabel(selectEl){
   if(full) opt.textContent = full;
 }
 
+function buildQuickOptions(times){
+  return `<option value="">▼</option>` + times.map(t=>`<option value="${t}">${t}</option>`).join("");
+}
+
+function syncQuickSelect(quickSel, timeVal, allowed){
+  if(!quickSel) return;
+  if(allowed.includes(timeVal)) quickSel.value = timeVal;
+  else quickSel.value = "";
+}
+
+function clearRow(tr){
+  const ort = tr.querySelector(".ort");
+  const start = tr.querySelector(".start");
+  const end = tr.querySelector(".end");
+  const hours = tr.querySelector(".hours");
+  const sQ = tr.querySelector(".startQuick");
+  const eQ = tr.querySelector(".endQuick");
+
+  if(ort){
+    restoreFullLabel(ort);
+    ort.value = "";
+    ort.selectedIndex = 0;
+  }
+  if(start) start.value = "";
+  if(end) end.value = "";
+  if(hours) hours.value = "";
+  if(sQ) sQ.value = "";
+  if(eQ) eQ.value = "";
+
+  updateTotal();
+  markDirty();
+  saveState();
+}
+
 function build(){
   fillMonthYear();
 
@@ -812,11 +888,30 @@ function build(){
         </select>
       </td>
 
-      <td><input type="time" class="start" list="startTimes"></td>
-      <td><input type="time" class="end" list="endTimes"></td>
+      <td>
+        <div class="timeCell">
+          <select class="timeQuick startQuick" aria-label="Beginn Schnellwahl">
+            ${buildQuickOptions(QUICK_START_TIMES)}
+          </select>
+          <input type="time" class="start" list="startTimes">
+        </div>
+      </td>
+
+      <td>
+        <div class="timeCell">
+          <select class="timeQuick endQuick" aria-label="Ende Schnellwahl">
+            ${buildQuickOptions(QUICK_END_TIMES)}
+          </select>
+          <input type="time" class="end" list="endTimes">
+        </div>
+      </td>
 
       <td>
         <input type="text" class="hours entryHours" placeholder="0" readonly>
+      </td>
+
+      <td style="text-align:center;">
+        <button class="rowClear" type="button" title="Zeile zurücksetzen" aria-label="Zeile zurücksetzen">↺</button>
       </td>
     `;
 
@@ -824,6 +919,9 @@ function build(){
     const start = tr.querySelector(".start");
     const end = tr.querySelector(".end");
     const hours = tr.querySelector(".hours");
+    const startQuick = tr.querySelector(".startQuick");
+    const endQuick = tr.querySelector(".endQuick");
+    const clearBtn = tr.querySelector(".rowClear");
 
     function activate(){ setActiveRow(tr); }
 
@@ -838,21 +936,63 @@ function build(){
     ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
     ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
 
-    start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
-    end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
+    startQuick.addEventListener("change", ()=>{
+      activate();
+      const v = startQuick.value || "";
+      if(v){
+        start.value = v;
+        start.dispatchEvent(new Event("change", { bubbles:true }));
+      }
+    });
+    endQuick.addEventListener("change", ()=>{
+      activate();
+      const v = endQuick.value || "";
+      if(v){
+        end.value = v;
+        end.dispatchEvent(new Event("change", { bubbles:true }));
+      }
+    });
+
+    start.addEventListener("change", ()=>{
+      activate();
+      syncQuickSelect(startQuick, start.value, QUICK_START_TIMES);
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
+    end.addEventListener("change", ()=>{
+      activate();
+      syncQuickSelect(endQuick, end.value, QUICK_END_TIMES);
+      autoHours(tr);
+      markDirty();
+      saveState();
+    });
 
     start.addEventListener("focus", activate);
     end.addEventListener("focus", activate);
 
     hours.addEventListener("focus",(e)=>e.target.blur());
 
+    clearBtn.addEventListener("click", ()=>{
+      activate();
+      clearRow(tr);
+    });
+
     rowsEl.appendChild(tr);
   }
 
   loadState();
 
-  document.querySelectorAll(".ort").forEach(sel=>{
-    if(sel.value) applyShortLabel(sel);
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const sel = tr.querySelector(".ort");
+    if(sel && sel.value) applyShortLabel(sel);
+
+    const s = tr.querySelector(".start");
+    const e = tr.querySelector(".end");
+    const sQ = tr.querySelector(".startQuick");
+    const eQ = tr.querySelector(".endQuick");
+    if(s && sQ) syncQuickSelect(sQ, s.value, QUICK_START_TIMES);
+    if(e && eQ) syncQuickSelect(eQ, e.value, QUICK_END_TIMES);
   });
 
   updateTotal();
@@ -1193,4 +1333,3 @@ nameEl.addEventListener("input", ()=>{
 </script>
 </body>
 </html>
-
