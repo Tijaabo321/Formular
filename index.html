@@ -150,7 +150,7 @@ input, select{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
-  min-width: 666px;
+  min-width: 620px;
 }
 .entryTable th{
   background: #ede9fe;
@@ -188,7 +188,7 @@ input, select{
   background:#fff;
 }
 
-.entryTable input[type="time"]{ color: #0f172a; min-width:0; }
+.entryTable input[type="time"]{ color: #0f172a; }
 .entryTable input[type="time"]::-webkit-datetime-edit{ color:#0f172a; }
 .entryTable input[type="time"]::-webkit-datetime-edit-text,
 .entryTable input[type="time"]::-webkit-datetime-edit-hour-field,
@@ -211,7 +211,6 @@ input, select{
 .colKehre{ width:190px; }
 .colTime{ width:120px; }
 .colStd{ width:120px; }
-.colAct{ width:46px; }
 
 .trActive td{
   background: linear-gradient(90deg, rgba(79,70,229,.08), rgba(6,182,212,.06));
@@ -225,7 +224,7 @@ input, select{
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack{ display:none !important; }
+  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack, .timeBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ display:block !important; }
 
@@ -425,42 +424,55 @@ input, select{
   border-color:rgba(79,70,229,.35);
 }
 
-/* ===== NEU: Quick-Time (für iPhone) ===== */
-.timeCell{
-  display:flex;
-  align-items:center;
-  gap:6px;
+/* ===== NUR NEU: iPhone Zeit-Auswahl (Bottom Sheet) ===== */
+.timeBack{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  z-index:400;
+  padding:14px;
 }
-.timeQuick{
-  width:44px;
-  padding:9px 6px;
-  border-radius:14px;
+.timeSheet{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:14px;
+  background:#fff;
+  border-radius:18px;
   border:1px solid var(--border);
-  font-size:14px;
-  font-weight:1000;
-  background:#fff;
-  color:#0f172a;
-  text-align:center;
+  box-shadow:var(--shadow);
+  overflow:hidden;
 }
-.timeQuick option{ color:#0f172a; }
-/* ======================================= */
-
-/* ===== NEU: Zeilen-Reset Button ===== */
-.rowClear{
-  width:38px;
-  height:38px;
-  padding:0;
-  border-radius:14px;
-  border:1px solid rgba(239,68,68,.25);
-  background:#fff;
-  color:#ef4444;
+.timeSheetTop{
+  padding:12px 14px;
+  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border-bottom:1px solid var(--border);
   font-weight:1000;
-  font-size:16px;
-  line-height:1;
+}
+.timeList{
+  max-height:42vh;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.timeItem{
+  padding:14px;
+  border-bottom:1px solid var(--border);
+  font-weight:900;
+  color:#0f172a;
+  background:#fff;
   cursor:pointer;
 }
-.rowClear:active{ transform: translateY(1px); }
-/* ==================================== */
+.timeItem.muted{ color:var(--muted); font-weight:800; }
+.timeItem:last-child{ border-bottom:none; }
+.timeCancel{
+  padding:14px;
+  border-top:1px solid var(--border);
+  font-weight:1000;
+  text-align:center;
+  cursor:pointer;
+}
+/* =============================================== */
 </style>
 </head>
 
@@ -499,6 +511,16 @@ input, select{
     </div>
   </div>
 </div>
+
+<!-- ===== NUR NEU: iPhone Zeit-Auswahl (Bottom Sheet) ===== -->
+<div class="timeBack" id="timeBack">
+  <div class="timeSheet" role="dialog" aria-modal="true">
+    <div class="timeSheetTop" id="timeTitle">Uhrzeit festlegen</div>
+    <div class="timeList" id="timeList"></div>
+    <div class="timeCancel" id="timeCancel">Abbrechen</div>
+  </div>
+</div>
+<!-- ======================================================= -->
 
 <div class="wrap">
 
@@ -547,7 +569,6 @@ input, select{
             <th class="colTime">BEGINN</th>
             <th class="colTime">ENDE</th>
             <th class="colStd">STUNDEN</th>
-            <th class="colAct"></th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -618,9 +639,6 @@ const ORTE = [
   { value: "Ochsenzoll",            short: "Ochsenzoll" }
 ];
 
-const QUICK_START_TIMES = ["21:00","22:00","23:00"];
-const QUICK_END_TIMES   = ["06:00","07:00","08:00"];
-
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
 const yearEl  = document.getElementById("year");
@@ -659,6 +677,17 @@ const dlgMsgEl = document.getElementById("dlgMsg");
 const dlgBtnsEl = document.getElementById("dlgBtns");
 const dlgOkBtn = document.getElementById("dlgOk");
 const dlgCancelBtn = document.getElementById("dlgCancel");
+
+/* ===== NUR NEU: Time Sheet Elemente ===== */
+const timeBack = document.getElementById("timeBack");
+const timeTitle = document.getElementById("timeTitle");
+const timeList = document.getElementById("timeList");
+const timeCancel = document.getElementById("timeCancel");
+
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+let activeTimeInput = null;
+/* ======================================= */
 
 let current = new Date(); current.setDate(1);
 let dirty = false;
@@ -787,6 +816,71 @@ function validateRowsBeforeSend(){
   return { ok:true };
 }
 
+/* ===== NUR NEU: iPhone Time Sheet Logic ===== */
+function closeTimeSheet(){
+  timeBack.style.display = "none";
+  timeList.innerHTML = "";
+  activeTimeInput = null;
+}
+
+function openTimeSheetForInput(inputEl, labelText, datalistId){
+  activeTimeInput = inputEl;
+  timeTitle.textContent = labelText || "Uhrzeit festlegen";
+  timeList.innerHTML = "";
+
+  const dl = document.getElementById(datalistId);
+  const opts = dl ? Array.from(dl.querySelectorAll("option")).map(o => (o.value||"").trim()).filter(Boolean) : [];
+
+  opts.forEach(v=>{
+    const div = document.createElement("div");
+    div.className = "timeItem";
+    div.textContent = v;
+    div.onclick = ()=>{
+      activeTimeInput.value = v;
+      activeTimeInput.readOnly = true;
+      closeTimeSheet();
+
+      const tr = activeTimeInput.closest("tr");
+      if(tr){
+        autoHours(tr);
+        markDirty();
+        saveState();
+      }
+    };
+    timeList.appendChild(div);
+  });
+
+  const other = document.createElement("div");
+  other.className = "timeItem muted";
+  other.textContent = "Sonstiges";
+  other.onclick = ()=>{
+    if(!activeTimeInput) return;
+    closeTimeSheet();
+    activeTimeInput.readOnly = false;
+    activeTimeInput.focus();
+
+    const onBlur = ()=>{
+      activeTimeInput.readOnly = true;
+      activeTimeInput.removeEventListener("blur", onBlur);
+
+      const tr = activeTimeInput.closest("tr");
+      if(tr){
+        autoHours(tr);
+        markDirty();
+        saveState();
+      }
+    };
+    activeTimeInput.addEventListener("blur", onBlur);
+  };
+  timeList.appendChild(other);
+
+  timeBack.style.display = "block";
+}
+
+timeCancel.addEventListener("click", closeTimeSheet);
+timeBack.addEventListener("click", (e)=>{ if(e.target === timeBack) closeTimeSheet(); });
+/* ========================================== */
+
 function fillMonthYear(){
   monthEl.innerHTML="";
   yearEl.innerHTML="";
@@ -829,40 +923,6 @@ function restoreFullLabel(selectEl){
   if(full) opt.textContent = full;
 }
 
-function buildQuickOptions(times){
-  return `<option value="">▼</option>` + times.map(t=>`<option value="${t}">${t}</option>`).join("");
-}
-
-function syncQuickSelect(quickSel, timeVal, allowed){
-  if(!quickSel) return;
-  if(allowed.includes(timeVal)) quickSel.value = timeVal;
-  else quickSel.value = "";
-}
-
-function clearRow(tr){
-  const ort = tr.querySelector(".ort");
-  const start = tr.querySelector(".start");
-  const end = tr.querySelector(".end");
-  const hours = tr.querySelector(".hours");
-  const sQ = tr.querySelector(".startQuick");
-  const eQ = tr.querySelector(".endQuick");
-
-  if(ort){
-    restoreFullLabel(ort);
-    ort.value = "";
-    ort.selectedIndex = 0;
-  }
-  if(start) start.value = "";
-  if(end) end.value = "";
-  if(hours) hours.value = "";
-  if(sQ) sQ.value = "";
-  if(eQ) eQ.value = "";
-
-  updateTotal();
-  markDirty();
-  saveState();
-}
-
 function build(){
   fillMonthYear();
 
@@ -888,30 +948,11 @@ function build(){
         </select>
       </td>
 
-      <td>
-        <div class="timeCell">
-          <select class="timeQuick startQuick" aria-label="Beginn Schnellwahl">
-            ${buildQuickOptions(QUICK_START_TIMES)}
-          </select>
-          <input type="time" class="start" list="startTimes">
-        </div>
-      </td>
-
-      <td>
-        <div class="timeCell">
-          <select class="timeQuick endQuick" aria-label="Ende Schnellwahl">
-            ${buildQuickOptions(QUICK_END_TIMES)}
-          </select>
-          <input type="time" class="end" list="endTimes">
-        </div>
-      </td>
+      <td><input ${IS_IOS ? 'type="text" inputmode="numeric" readonly' : 'type="time"'} class="start" ${IS_IOS ? '' : 'list="startTimes"'}></td>
+      <td><input ${IS_IOS ? 'type="text" inputmode="numeric" readonly' : 'type="time"'} class="end" ${IS_IOS ? '' : 'list="endTimes"'}></td>
 
       <td>
         <input type="text" class="hours entryHours" placeholder="0" readonly>
-      </td>
-
-      <td style="text-align:center;">
-        <button class="rowClear" type="button" title="Zeile zurücksetzen" aria-label="Zeile zurücksetzen">↺</button>
       </td>
     `;
 
@@ -919,9 +960,17 @@ function build(){
     const start = tr.querySelector(".start");
     const end = tr.querySelector(".end");
     const hours = tr.querySelector(".hours");
-    const startQuick = tr.querySelector(".startQuick");
-    const endQuick = tr.querySelector(".endQuick");
-    const clearBtn = tr.querySelector(".rowClear");
+
+    if(IS_IOS){
+      start.placeholder = "--:--";
+      end.placeholder = "--:--";
+
+      start.addEventListener("click", ()=> openTimeSheetForInput(start, "Beginn festlegen", "startTimes"));
+      end.addEventListener("click", ()=> openTimeSheetForInput(end, "Ende festlegen", "endTimes"));
+
+      start.addEventListener("focus", ()=> start.blur());
+      end.addEventListener("focus", ()=> end.blur());
+    }
 
     function activate(){ setActiveRow(tr); }
 
@@ -936,63 +985,21 @@ function build(){
     ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
     ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
 
-    startQuick.addEventListener("change", ()=>{
-      activate();
-      const v = startQuick.value || "";
-      if(v){
-        start.value = v;
-        start.dispatchEvent(new Event("change", { bubbles:true }));
-      }
-    });
-    endQuick.addEventListener("change", ()=>{
-      activate();
-      const v = endQuick.value || "";
-      if(v){
-        end.value = v;
-        end.dispatchEvent(new Event("change", { bubbles:true }));
-      }
-    });
-
-    start.addEventListener("change", ()=>{
-      activate();
-      syncQuickSelect(startQuick, start.value, QUICK_START_TIMES);
-      autoHours(tr);
-      markDirty();
-      saveState();
-    });
-    end.addEventListener("change", ()=>{
-      activate();
-      syncQuickSelect(endQuick, end.value, QUICK_END_TIMES);
-      autoHours(tr);
-      markDirty();
-      saveState();
-    });
+    start.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
+    end.addEventListener("change", ()=>{ activate(); autoHours(tr); markDirty(); saveState(); });
 
     start.addEventListener("focus", activate);
     end.addEventListener("focus", activate);
 
     hours.addEventListener("focus",(e)=>e.target.blur());
 
-    clearBtn.addEventListener("click", ()=>{
-      activate();
-      clearRow(tr);
-    });
-
     rowsEl.appendChild(tr);
   }
 
   loadState();
 
-  document.querySelectorAll("#rows tr").forEach(tr=>{
-    const sel = tr.querySelector(".ort");
-    if(sel && sel.value) applyShortLabel(sel);
-
-    const s = tr.querySelector(".start");
-    const e = tr.querySelector(".end");
-    const sQ = tr.querySelector(".startQuick");
-    const eQ = tr.querySelector(".endQuick");
-    if(s && sQ) syncQuickSelect(sQ, s.value, QUICK_START_TIMES);
-    if(e && eQ) syncQuickSelect(eQ, e.value, QUICK_END_TIMES);
+  document.querySelectorAll(".ort").forEach(sel=>{
+    if(sel.value) applyShortLabel(sel);
   });
 
   updateTotal();
