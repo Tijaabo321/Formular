@@ -925,7 +925,13 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
           }
           closeTimeSheet();
         };
-        nativeTime.click();
+        nativeTime.focus();
+
+        if(nativeTime.showPicker){
+          nativeTime.showPicker();
+        }else{
+          nativeTime.click();
+        }
         return;
       }
 
@@ -1407,5 +1413,3 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 </script>
 </body>
 </html>
-
-
