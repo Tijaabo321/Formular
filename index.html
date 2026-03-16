@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="de">
 <head>
@@ -566,10 +567,10 @@ input, select{
 
   <div class="card">
     <div>
-      <label>Name:</label>
-      <input id="name" placeholder="Bitte hier deinen Namen eintragen">
+      <label>Personal-Pin:</label>
+      <input id="name" placeholder="Persönlicher PIN">
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
-        Bitte erst Name eintragen.
+        Bitte gültige Personal-PIN (2 Ziffern) eingeben.
       </div>
     </div>
 
@@ -1224,7 +1225,7 @@ function loadState(){
 
   try{
     const st=JSON.parse(raw);
-    nameEl.value=st.name||"";
+    nameEl.value = (/^\d{2}$/.test(st.name||"")) ? st.name : "";
 
     const rowEls=document.querySelectorAll("#rows tr");
     (st.rows||[]).forEach((r, idx)=>{
@@ -1357,7 +1358,8 @@ function closePreview(){ modalBack.style.display="none"; }
 
 async function senden(){
   const nm = (nameEl.value || "").trim();
-  if(!nm){
+
+  if(!/^\d{2}$/.test(nm)){
     setNameError(true);
     nameEl.focus();
     return;
@@ -1469,5 +1471,4 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 </script>
 </body>
 </html>
-
-
+```
